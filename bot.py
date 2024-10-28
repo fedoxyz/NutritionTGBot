@@ -1,3 +1,4 @@
+#/usr/bin/env python3
 from logs.logger import logger
 from db import init_db
 import asyncio
@@ -15,7 +16,7 @@ async def main():
 
     await app.initialize()
     await app.start()
-    
+
     try:
         await app.updater.start_polling()
         logger.info("Бот запущен")

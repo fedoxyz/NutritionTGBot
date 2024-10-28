@@ -1,0 +1,39 @@
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama-container
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - 11434:11434
+    runtime: nvidia  # Использование GPU runtime
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all  # Указываем все доступные GPU
+
+  postgres:
+    image: postgres
+    container_name: postgres-container
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: "nutrition"
+      POSTGRES_USER: "db_username"
+      POSTGRES_PASSWORD: "db_password"
+    ports:
+      - "5432:5432"
+
+  bot:
+    build:
+      context: ./
+      dockerfile: bot/Dockerfile
+    container_name: bot-container
+    working_dir: /bot
+    volumes:
+      - ./:/bot
+    env_file:
+      - .env
+
+volumes:
+  ollama:
+  pgdata:

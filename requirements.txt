@@ -1,6 +1,6 @@
 python-telegram-bot==21.5
 python-dotenv==1.0.1
-logging==0.4.9.6
+# logging==0.4.9.6
 colorama==0.4.6
 asyncpg==0.29.0
 sqlalchemy==2.0.34
