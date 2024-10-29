@@ -1,5 +1,5 @@
 from keyboards.main_kb import main_kb
-from keyboards.add_check_products_kb import confirm_cancel_kb, products_paginator 
+from keyboards.json_receipt_kb import confirm_cancel_kb, products_paginator 
 from logs.logger import logger
 import re
 from telegram import Update
@@ -7,15 +7,15 @@ from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHan
 from typing import Dict, Callable, Awaitable
 from utils.message_utils import send_message, edit_message
 from utils.chat_filters import private_chat_only
-from utils.json_utils import parse_json_file, validate_check_data
-from db.functions.checks import new_check
+from utils.json_utils import parse_json_file, validate_receipt_data
+from db.functions.receipts import new_receipt
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 # Store user-specific temporary data (e.g., parsed products)
-user_checks = {}
+user_receipts = {}
 
-async def handle_json_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Check if the message contains a document
     if not update.message or not update.message.document:
         await update.message.reply_text("Пожалуйста, отправьте файл чека.")
@@ -26,17 +26,17 @@ async def handle_json_check(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     file_content = await file.download_as_bytearray()
 
     # Parse the JSON file into a dictionary
-    data = parse_json_file(file_content)  # This now returns {"check_date": ..., "products": ...}
+    data = parse_json_file(file_content)  # This now returns {"receipt_date": ..., "products": ...}
     
     if not data or 'products' not in data or not data['products']:
         await update.message.reply_text("Не удалось распознать чек или продукты отсутствуют.")
         return
 
     # Store the parsed products temporarily for the user
-    user_checks[update.effective_user.id] = {"products": data['products'], "check_date": data['check_date']}
+    user_receipts[update.effective_user.id] = {"products": data['products'], "receipt_date": data['receipt_date']}
 
-    # Create a text variable to summarize the check details
-    text = f"Чек на дату: {data['check_date']}\n\nПродукты:\n"
+    # Create a text variable to summarize the receipt details
+    text = f"Чек на дату: {data['receipt_date']}\n\nПродукты:\n"
 
     # Show the first page of products using pagination
     paginator = await products_paginator(data['products'], page=1)
@@ -58,12 +58,12 @@ async def product_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     logger.debug(f"query.data of product_pag_callback: {query.data}")
     
-    check_data = user_checks.get(user_id)
-    products = check_data['products']
+    receipt_data = user_receipts.get(user_id)
+    products = receipt_data['products']
 
     page = int(query.data.split('#')[1])
     paginator = await products_paginator(products, page)
-    text = f"Чек на дату: {check_data['check_date']}\n\nПродукты:\n"
+    text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
     text += f"Страница {page}"
 
     await edit_message(query, text=text, reply_markup=paginator.markup)
@@ -71,11 +71,11 @@ async def product_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    check_data = user_checks.pop(user_id, None)  # Retrieve and remove the temporary data
+    receipt_data = user_receipts.pop(user_id, None)  # Retrieve and remove the temporary data
 
-    if check_data:
-        # Simulate adding the check to the database
-        success = await new_check(user_id, check_data)
+    if receipt_data:
+        # Simulate adding the receipt to the database
+        success = await new_receipt(user_id, receipt_data)
         text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека."
     else:
         text = "Нет данных для добавления."
@@ -84,7 +84,7 @@ async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    user_checks.pop(user_id, None)  # Discard the temporary data
+    user_receipts.pop(user_id, None)  # Discard the temporary data
 
     await update.message.reply_text(
         "Добавление чека отменено.",
@@ -109,16 +109,16 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:
         await update.message.reply_text(f"Неизвестная опция: {option}")
 
-def setup_check_process_handlers(application):
-    check_process_filter = filters.Regex('^(' + '|'.join(map(re.escape, menu_options.keys())) + ')$')
-    application.add_handler(MessageHandler(check_process_filter & ~filters.COMMAND, handler))
+def setup_receipt_process_handlers(application):
+    receipt_process_filter = filters.Regex('^(' + '|'.join(map(re.escape, menu_options.keys())) + ')$')
+    application.add_handler(MessageHandler(receipt_process_filter & ~filters.COMMAND, handler))
     application.add_handler(MessageHandler(
         filters.Document.FileExtension("json") & ~filters.COMMAND,
-        handle_json_check
+        handle_json_receipt
     ))
     application.add_handler(CallbackQueryHandler(product_pag_callback, pattern=r"^product_page#\d+$"))
 
-    logger.debug("Добавлены check process handlers")
+    logger.debug("Добавлены receipt process handlers")
 
 
 

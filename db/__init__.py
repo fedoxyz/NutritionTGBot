@@ -2,7 +2,7 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
-from .models import Base, User, Check, Product, check_product_association
+from .models import Base, User, Receipt, Product, check_product_association
 
 class Database:
     def __init__(self, url: str):
@@ -36,4 +36,4 @@ db = Database(DATABASE_URL)
 async def init_db():
     await db.init_models()
 
-__all__ = ['db', 'init_db', 'User', 'Check', 'Product', 'check_product_association']
+__all__ = ['db', 'init_db', 'User', 'Receipt', 'Product', 'check_product_association']

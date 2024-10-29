@@ -3,16 +3,16 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import datetime
 
 Base = declarative_base()
 
-# Association table between Check and Product
+# Association table between Receipt and Product
 check_product_association = Table(
-    'check_products',
+    'receipt_products',
     Base.metadata,
-    Column('check_id', BigInteger, ForeignKey('checks.id', ondelete='CASCADE'), primary_key=True),
-    Column('product_id', BigInteger, ForeignKey('products.id', ondelete='SET NULL'), primary_key=True)  # Allow product deletion without affecting checks
+    Column('receipt_id', BigInteger, ForeignKey('receipts.id', ondelete='CASCADE'), primary_key=True),
+    Column('product_id', BigInteger, ForeignKey('products.id', ondelete='SET NULL'), primary_key=True)  # Allow product deletion without affecting receipts
 )
 
 class User(Base):
@@ -37,8 +37,8 @@ class Product(Base):
     def __repr__(self):
         return f"<Product(id={self.id}, name={self.name}, price={self.price})>"
 
-class Check(Base):
-    __tablename__ = 'checks'
+class Receipt(Base):
+    __tablename__ = 'receipts'
 
     id = Column(BigInteger, Identity(), primary_key=True, nullable=False)
     user_id = Column(BigInteger, ForeignKey('users.telegram_id', ondelete='CASCADE'), nullable=False)
@@ -46,9 +46,9 @@ class Check(Base):
     created_at = Column(DateTime, default=lambda: datetime.now())
 
     # Relationship with User and Products
-    user = relationship('User', backref='checks')
-    products = relationship('Product', secondary=check_product_association, backref='checks')
+    user = relationship('User', backref='receipts')
+    products = relationship('Product', secondary=check_product_association, backref='receipts')
 
     def __repr__(self):
-        return f"<Check(id={self.id}, user_id={self.user_id})>"
+        return f"<Receipt(id={self.id}, user_id={self.user_id})>"
 

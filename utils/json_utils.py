@@ -8,16 +8,16 @@ def parse_json_file(file_content: bytes) -> dict:
         data = json.loads(file_content.decode('utf-8'))
 
         # Validate the JSON data structure
-        validate_check_data(data)
+        validate_receipt_data(data)
 
-        check_date_str = data.get("localDateTime")
-        if check_date_str:
+        receipt_date_str = data.get("localDateTime")
+        if receipt_date_str:
             # Parse the date string to a datetime object
-            check_date = datetime.fromisoformat(check_date_str)
+            receipt_date = datetime.fromisoformat(receipt_date_str)
         else:
             # Fallback: convert Unix timestamp to datetime with timezone
             timestamp = data.get("dateTime")
-            check_date = datetime.fromtimestamp(timestamp)
+            receipt_date = datetime.fromtimestamp(timestamp)
 
         # Extract product details
         products = [
@@ -31,7 +31,7 @@ def parse_json_file(file_content: bytes) -> dict:
 
         # Return the result dictionary
         return {
-            "check_date": check_date,
+            "receipt_date": receipt_date,
             "products": products
         }
 
@@ -39,7 +39,7 @@ def parse_json_file(file_content: bytes) -> dict:
         logger.error(f"Error parsing JSON: {e}")
         return {}
 
-def validate_check_data(json_data: dict) -> None:
+def validate_receipt_data(json_data: dict) -> None:
     """Ensure required keys are present and items list is not empty."""
     required_keys = ["items"]
 
