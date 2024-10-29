@@ -4,3 +4,5 @@ python-dotenv==1.0.1
 colorama==0.4.6
 asyncpg==0.29.0
 sqlalchemy==2.0.34
+ptb-pagination==0.0.4
+
