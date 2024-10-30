@@ -30,7 +30,6 @@ async def products_paginator(products: List[dict], page: int) -> Union[InlineKey
     product_kb = products_list_kb(products[(page - 1) * MAX_PAGE_SIZE: page * MAX_PAGE_SIZE])
     paginator.add_before(product_kb)
 
-
     return paginator
 
 
