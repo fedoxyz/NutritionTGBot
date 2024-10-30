@@ -29,7 +29,8 @@ async def product_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     if query:
         await edit_message(query, text=text, reply_markup=paginator.markup)
     else:
-        await send_message(update, context, text=text, reply_markup=paginator.markup)
+        receipt_message = await send_message(update, context, text=text, reply_markup=paginator.markup)
+        context.user_data['receipt_message_id'] = receipt_message.message_id
         await send_message(update, context, text="Подтвердите добавление чека:", reply_markup=confirm_cancel_kb())
 
 
@@ -40,14 +41,18 @@ async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if receipt_data:
         # Simulate adding the receipt to the database
         success = await new_receipt(user_id, receipt_data)
-        text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека."
+        text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека. Попробуйте снова."
     else:
         text = "Нет данных для добавления."
+
+    await delete_receipt_message(update, context)
 
     await send_message(update, context, text=text, reply_markup=main_kb())
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data["current_receipt"] = {}
+    context.user_data.pop('current_receipt', None)
+
+    await delete_receipt_message(update, context)
 
     await update.message.reply_text(
         "Добавление чека отменено.",
@@ -57,6 +62,18 @@ menu_options: Dict[str, OptionHandler] = {
         "✅ Подтвердить": confirm_add,
         "❌ Отменить": cancel
         }
+
+async def delete_receipt_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if 'receipt_message_id' in context.user_data:
+        try:
+            await context.bot.delete_message(
+                chat_id=update.effective_chat.id,
+                message_id=context.user_data['receipt_message_id']
+            )
+        except Exception as e:
+            logger.error(f"Error deleting message: {e}")
+        
+        del context.user_data['receipt_message_id']
 
 @private_chat_only
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
