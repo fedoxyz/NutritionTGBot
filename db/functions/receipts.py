@@ -38,7 +38,7 @@ async def new_receipt(user_id: int, receipt_data: Dict) -> Optional[Receipt]:
             product = await session.get(Product, product_id)
             if product:
                 # Insert into the association table
-                stmt = receipt_product_association.insert().values(
+                stmt = check_product_association.insert().values(
                     receipt_id=new_receipt.id, product_id=product.id
                 )
                 await session.execute(stmt)
@@ -68,7 +68,7 @@ async def fetch_user_receipts(
         logger.debug(f"Fetching orders for user_id {user_id} with offset {offset}, limit {limit}, and sort order {sort_order}")
         
         # Base query
-        query = select(Receipt).where(Check.user_id == user_id)
+        query = select(Receipt).where(Receipt.user_id == user_id)
 
         
         # Apply sorting

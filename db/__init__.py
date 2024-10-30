@@ -31,9 +31,10 @@ class Database:
     async def reset_db(self):
          """Drop and recreate all tables, handling dependencies."""
          async with self.engine.begin() as conn:
-             await conn.execute(text("DROP TABLE IF EXISTS check_products CASCADE"))
+             await conn.execute(text("DROP TABLE IF EXISTS receipt_products CASCADE"))
              await conn.execute(text("DROP TABLE IF EXISTS products CASCADE"))
              await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+             await conn.execute(text("DROP TABLE IF EXISTS receipts CASCADE"))
              
              # Recreate all tables
              await conn.run_sync(Base.metadata.create_all)
@@ -46,7 +47,7 @@ if not DATABASE_URL:
 db = Database(DATABASE_URL)
 
 async def init_db():
-    await db.reset_db()
+    await db.reset_db() # Использовать при дебаге
     await db.init_models()
 
 __all__ = ['db', 'init_db', 'User', 'Receipt', 'Product', 'check_product_association']

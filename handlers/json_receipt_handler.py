@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
 from utils.json_utils import parse_json_file
-from .receipt_overview_handler import product_pag_callback
+from .receipt_overview_handler import product_pag_callback, delete_receipt_message
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -13,7 +13,7 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not update.message or not update.message.document:
         await update.message.reply_text("Пожалуйста, отправьте файл чека.")
         return
-
+    await delete_receipt_message(update, context)
     # Download the file as a bytearray
     file = await update.message.document.get_file()
     file_content = await file.download_as_bytearray()
