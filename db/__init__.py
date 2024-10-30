@@ -2,6 +2,7 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 from .models import Base, User, Receipt, Product, check_product_association
 
 class Database:
@@ -27,6 +28,17 @@ class Database:
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
+    async def reset_db(self):
+         """Drop and recreate all tables, handling dependencies."""
+         async with self.engine.begin() as conn:
+             await conn.execute(text("DROP TABLE IF EXISTS check_products CASCADE"))
+             await conn.execute(text("DROP TABLE IF EXISTS products CASCADE"))
+             await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+             
+             # Recreate all tables
+             await conn.run_sync(Base.metadata.create_all)
+
+
 DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
     raise ValueError("Переменная среды DATABASE_URL не установлена в .env")
@@ -34,6 +46,7 @@ if not DATABASE_URL:
 db = Database(DATABASE_URL)
 
 async def init_db():
+    await db.reset_db()
     await db.init_models()
 
 __all__ = ['db', 'init_db', 'User', 'Receipt', 'Product', 'check_product_association']
