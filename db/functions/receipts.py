@@ -13,7 +13,9 @@ async def new_receipt(user_id: int, receipt_data: Dict) -> Optional[Receipt]:
         user = await session.execute(select(User).where(User.telegram_id == user_id))
         user = user.scalar_one_or_none()
         if not user:
+            logger.warning(f"User with telegram_id {user_id} not found.")
             return None
+
         logger.debug(f"{user.telegram_id} - is new_order.user_id")
 
         # Create a new Receipt entry
@@ -28,30 +30,37 @@ async def new_receipt(user_id: int, receipt_data: Dict) -> Optional[Receipt]:
             logger.error(f"Failed to commit new receipt: {e}")
             return None
 
-        # Associate products with the receipt
+        # Associate new products with the receipt
         products = receipt_data.get("products", [])
+        logger.debug(f"{products} - products")
         for product_data in products:
-            product_id = product_data.get("id")
-            quantity = product_data.get("quantity", 1)
+            product_name = product_data.get("name")
+            price = product_data.get("price")
+            quantity = product_data.get("quantity")
+            logger.debug(f"{quantity} - quantity")
 
-            # Fetch the product by ID
-            product = await session.get(Product, product_id)
-            if product:
-                # Insert into the association table
-                stmt = check_product_association.insert().values(
-                    receipt_id=new_receipt.id, product_id=product.id
-                )
-                await session.execute(stmt)
+            # Create a new product directly without checking for existence
+            new_product = Product(name=product_name, price=price, quantity=quantity)
+            session.add(new_product)
+            logger.debug(f"Adding new product: {new_product.name}")
 
-                # Optionally, update product quantity if needed
-                if product.quantity is not None:
-                    product.quantity -= quantity
-                    session.add(product)
+            # Commit to ensure the new_product has an ID
+            try:
+                await session.commit()  # Commit here to get new_product.id
+                logger.debug(f"Created new product: {new_product}")
+            except IntegrityError as e:
+                logger.error(f"Failed to commit new product: {e}")
+                return None
 
-        # Final commit with the product associations
+            # Insert into the association table
+            stmt = check_product_association.insert().values(
+                receipt_id=new_receipt.id, product_id=new_product.id
+            )
+            await session.execute(stmt)
+
         try:
             await session.commit()
-            logger.debug(f"Associated products with receipt: {new_receipt.id}")
+            logger.debug(f"Associated new products with receipt: {new_receipt.id}")
         except IntegrityError as e:
             logger.error(f"Failed to associate products: {e}")
             return None

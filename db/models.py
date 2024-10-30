@@ -33,6 +33,8 @@ class Product(Base):
     name = Column(String(255), nullable=False)
     price = Column(BigInteger, nullable=True)
     quantity = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now())
+
 
     def __repr__(self):
         return f"<Product(id={self.id}, name={self.name}, price={self.price})>"

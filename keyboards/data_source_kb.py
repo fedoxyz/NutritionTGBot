@@ -1,9 +1,9 @@
-from telegram import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
+from telegram import KeyboardButton, ReplyKeyboardMarkup
 from db.functions.receipts import fetch_user_receipts
+from db.functions.products import fetch_user_products
 from ptb_pagination import InlineKeyboardPaginator
-import math
 from typing import Union
-
+from .paginator_kb import generic_paginator
 from logs.logger import logger
 
 COLUMNS_NUMBER = 1
@@ -18,45 +18,37 @@ def data_source_kb():
     ]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-async def receipts_paginator(user_id: int, page: int)  -> Union[InlineKeyboardPaginator, bool]:
-    max_receipts = len(await fetch_user_receipts(user_id, offset=0, limit=300))
-    if (max_receipts == 0):
-        return False
+async def receipts_paginator(user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
+    max_items = len(await fetch_user_receipts(user_id, offset=0, limit=300))
+    offset = (page - 1) * MAX_PAGE_SIZE  # Calculate offset for pagination
+    receipts = await fetch_user_receipts(user_id, offset=offset, limit=MAX_PAGE_SIZE)
 
-    paginator = InlineKeyboardPaginator(
-        math.ceil(max_receipts / MAX_PAGE_SIZE),
-        current_page=page,
-        data_pattern='receipts_page#{page}'
+    return await generic_paginator(
+        page=page,
+        max_page_size=MAX_PAGE_SIZE,
+        columns_number=COLUMNS_NUMBER,
+        items=receipts,
+        text_func=lambda r: f"Время на чеке: {r.time}",
+        data_func=lambda r: f"{r.id}",
+        data_pattern='receipts_page#{page}',
+        max_items=max_items
     )
-    logger.debug(f"Page is {page}")
-    receipt_list_kb = receipts_list_kb(
-        await fetch_user_receipts(
-            user_id,
-            offset=(page - 1) * MAX_PAGE_SIZE,
-            limit=MAX_PAGE_SIZE
-        )
+
+async def products_paginator(user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
+    max_items = len(await fetch_user_products(user_id, offset=0, limit=300))
+    offset = (page - 1) * MAX_PAGE_SIZE  # Calculate offset for pagination
+    products = await fetch_user_products(user_id, offset=offset, limit=MAX_PAGE_SIZE)
+
+    return await generic_paginator(
+        page=page,
+        max_page_size=MAX_PAGE_SIZE,
+        columns_number=COLUMNS_NUMBER,
+        items=products,
+        text_func=lambda p: (
+            f"🛒 {p.name[:26] + '...' if len(p.name) > 26 else p.name} "
+            f"- (кол-во: {p.quantity})"
+        ),
+        data_func=lambda p: f"{p.id}",
+        data_pattern='products_page#{page}',
+        max_items=max_items
     )
-    paginator.add_before(receipt_list_kb)
-
-    return paginator
-
-
-def receipts_list_kb(receipts_list: list) -> list:
-    receipt_history_kb = []
-    for receipt_sub_list in chunks(receipts_list, COLUMNS_NUMBER):
-        sub_keyboard = []
-        for receipt in receipt_sub_list:
-            logger.debug(f"receipt in receipt_sub_list - {receipt}")
-            button_text = f"Время на чеке: {receipt.time}"
-            sub_keyboard.append(
-                InlineKeyboardButton(
-                    button_text, callback_data=receipt.id
-                )
-            )
-        receipt_history_kb.append(sub_keyboard)
-    return receipt_history_kb
-
-def chunks(lst, n):
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
-
