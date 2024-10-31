@@ -29,6 +29,7 @@ async def generic_paginator(
 
     # Calculate the offset based on the current page
     offset = (page - 1) * max_page_size
+   
     items_for_page = items[offset:offset + max_page_size] if max_items == len(items) else items  
     # Generate keyboard with fetched items
     item_list_kb = generate_keyboard(items_for_page, columns_number, text_func, data_func)

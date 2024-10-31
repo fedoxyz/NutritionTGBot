@@ -18,7 +18,7 @@ def data_source_kb():
     ]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-async def receipts_paginator(user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
+async def receipts_paginator(update, context, user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
     max_items = len(await fetch_user_receipts(user_id, offset=0, limit=300))
     offset = (page - 1) * MAX_PAGE_SIZE  # Calculate offset for pagination
     receipts = await fetch_user_receipts(user_id, offset=offset, limit=MAX_PAGE_SIZE)
@@ -34,7 +34,7 @@ async def receipts_paginator(user_id: int, page: int) -> Union[InlineKeyboardPag
         max_items=max_items
     )
 
-async def products_paginator(user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
+async def products_paginator(update, context, user_id: int, page: int) -> Union[InlineKeyboardPaginator, bool]:
     max_items = len(await fetch_user_products(user_id, offset=0, limit=300))
     offset = (page - 1) * MAX_PAGE_SIZE  # Calculate offset for pagination
     products = await fetch_user_products(user_id, offset=offset, limit=MAX_PAGE_SIZE)

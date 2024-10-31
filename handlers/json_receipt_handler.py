@@ -1,10 +1,9 @@
-from keyboards.receipt_kb import confirm_cancel_kb 
 from logs.logger import logger
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
 from utils.json_utils import parse_json_file
-from .receipt_overview_handler import product_pag_callback, delete_receipt_message
+from .receipt_overview_handler import products_list_pag_callback, delete_receipt_message
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -33,7 +32,7 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
             'selected_product': None
         }
 
-    await product_pag_callback(update, context)
+    await products_list_pag_callback(update, context)
 
 
 def setup_json_receipt_handlers(application):

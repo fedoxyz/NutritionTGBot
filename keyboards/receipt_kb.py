@@ -15,9 +15,11 @@ def confirm_cancel_kb():
         one_time_keyboard=True,
     )
 
-async def products_paginator(products: List[dict], page: int) -> Union[InlineKeyboardPaginator, bool]:
+async def products_paginator(update, context, products: List[dict], page: int, **kwargs) -> Union[InlineKeyboardPaginator, bool]:
     """Generate a paginated view for the products."""
-    
+    # Костыль
+    if type(products) == int:
+        products = context.user_data["current_receipt"]["products"]
     return await generic_paginator(
         page=page,
         items=products, 
@@ -28,5 +30,6 @@ async def products_paginator(products: List[dict], page: int) -> Union[InlineKey
         data_func=lambda p: "donothing",  # Static callback data
         data_pattern='product_page#{page}',
         max_page_size=MAX_PAGE_SIZE,
-        columns_number=COLUMNS_NUMBER
+        columns_number=COLUMNS_NUMBER,
+        **kwargs
     )

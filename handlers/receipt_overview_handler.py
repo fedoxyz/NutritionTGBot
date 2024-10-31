@@ -8,30 +8,17 @@ from typing import Dict, Callable, Awaitable
 from utils.message_utils import send_message, edit_message
 from utils.chat_filters import private_chat_only
 from db.functions.receipts import new_receipt
+from .pagination_utils import handle_pagination
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
-async def product_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     receipt_data = context.user_data["current_receipt"]
-    query = update.callback_query
-    if query:
-        await query.answer()
-        logger.debug(f"query.data of product_pag_callback: {query.data}")
-    receipt_data = context.user_data["current_receipt"] 
-    products = receipt_data['products']
-
-    page = int(query.data.split('#')[1]) if query and query.data else receipt_data["current_page"]
-    context.user_data["current_receipt"]["current_page"] = page
-    paginator = await products_paginator(products, page)
-    text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
-    text += f"Страница {page}"
-    
-    if query:
-        await edit_message(query, text=text, reply_markup=paginator.markup)
-    else:
-        receipt_message = await send_message(update, context, text=text, reply_markup=paginator.markup)
-        context.user_data['receipt_message_id'] = receipt_message.message_id
-        await send_message(update, context, text="Подтвердите добавление чека:", reply_markup=confirm_cancel_kb())
+    button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
+    max_items = len(receipt_data["products"])
+    message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items)
+    context.user_data['receipt_message_id'] = message.message_id
+    await send_message(update, context, text="Пожалуйста, подтвердите действие", reply_markup=confirm_cancel_kb())
 
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -92,7 +79,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def setup_receipt_process_handlers(application):
     receipt_process_filter = filters.Regex('^(' + '|'.join(map(re.escape, menu_options.keys())) + ')$')
     application.add_handler(MessageHandler(receipt_process_filter & ~filters.COMMAND, handler))
-    application.add_handler(CallbackQueryHandler(product_pag_callback, pattern=r"^product_page#\d+$"))
+    application.add_handler(CallbackQueryHandler(products_list_pag_callback, pattern=r"^product_page#\d+$"))
 
     logger.debug("Добавлены receipt process handlers")
 

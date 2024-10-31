@@ -3,46 +3,19 @@ import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
-from utils.message_utils import send_message, edit_message
+from utils.message_utils import send_message
 from utils.chat_filters import private_chat_only
 from keyboards.data_source_kb import receipts_paginator, data_source_kb, products_paginator
+from .pagination_utils import handle_pagination, handle_list_display
 
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def receipts_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    if query:
-        await query.answer()
-        logger.debug(f"query.data of receipt_pag_callback: {query.data}")
-    user_id = update.effective_user.id
-    page = int(query.data.split('#')[1]) if query and query.data else 1
-    paginator = await receipts_paginator(user_id, page)
-    text = f"Список чеков:\n"
-    text += f"Страница {page}"
-    
-    if query:
-        await edit_message(query, text=text, reply_markup=paginator.markup)
-    else:
-        await send_message(update, context, text=text, reply_markup=paginator.markup)
-
+    await handle_pagination(update, context, receipts_paginator, "Список чеков:")
 
 async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    if query:
-        await query.answer()
-        logger.debug(f"query.data of products_list_pag_callback: {query.data}")
-    user_id = update.effective_user.id
-    page = int(query.data.split('#')[1]) if query and query.data else 1
-    paginator = await products_paginator(user_id, page)
-    text = f"Список купленных продуктов:\n"
-    text += f"Страница {page}"
-    
-    if query:
-        await edit_message(query, text=text, reply_markup=paginator.markup)
-    else:
-        await send_message(update, context, text=text, reply_markup=paginator.markup)
-
+    await handle_pagination(update, context, products_paginator, "Список купленных продуктов:")
 
 async def data_source(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = "Выберите опцию: "
@@ -66,26 +39,10 @@ async def how_to_receipts(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await send_message(update, context, text=text, reply_markup=data_source_kb(), parse_mode="Markdown", disable_web_page_preview=True)
 
 async def receipts_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Список чеков:"
-    user_id = update.effective_user.id
-    paginator = await receipts_paginator(user_id, 1)
-    if paginator:
-        text += "\nСтраница 1"
-        await send_message(update, context, text, reply_markup=paginator.markup)
-    else:
-        text += "\nПусто"
-        await send_message(update, context, text)
+    await handle_list_display(update, context, receipts_paginator, "Список чеков:")
 
 async def purchased_p_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Список купленных продуктов:"
-    user_id = update.effective_user.id
-    paginator = await products_paginator(user_id, 1)
-    if paginator:
-        text += "\nСтраница 1"
-        await send_message(update, context, text, reply_markup=paginator.markup)
-    else:
-        text += "\nПусто"
-        await send_message(update, context, text)
+    await handle_list_display(update, context, products_paginator, "Список купленных продуктов:")
 
 async def unrecognized_p_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = "Здесь будет список нераспознанных продуктов"
