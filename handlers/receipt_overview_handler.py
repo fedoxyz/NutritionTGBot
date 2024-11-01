@@ -17,15 +17,21 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
     max_items = len(receipt_data["products"])
     logger.debug(f"{max_items} - max items")
-    message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items)
-    context.user_data['receipt_message_id'] = message.message_id
     if update.callback_query:
-        text=""
+        query = update.callback_query
+        query.answer()
+        callback_data = query.data.split('#')
+        page = callback_data[1] if "product" in callback_data[0] else context.user_data["current_receipt"]["current_page"]
     else:
-        text="Выберите опцию"
+        page = 1
+    message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items, page=page)
+    context.user_data['receipt_message_id'] = message.message_id
 
-    logger.debug(f"{text} - text")
-    await send_message(update, context, text=text, reply_markup=confirm_cancel_kb())
+    if not update.callback_query:
+        text="Выберите опцию"
+        await send_message(update, context, text=text, reply_markup=confirm_cancel_kb())
+        return
+
 
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

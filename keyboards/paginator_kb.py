@@ -81,13 +81,14 @@ def chunks(lst: List[Any], n: int) -> Generator[List[Any], None, None]:
         yield lst[i:i + n]
 
 
-async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, paginator_func, list_text: str, **kwargs) -> None:
+async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, paginator_func, list_text: str, page = None, **kwargs) -> None:
     query = update.callback_query
     if query:
         await query.answer()
         logger.debug(f"query.data: {query.data}")
     user_id = update.effective_user.id
-    page = int(query.data.split('#')[1]) if query and query.data else 1
+    logger.debug(f"{page}")
+    page = int(query.data.split('#')[1]) if query and query.data and page != None else int(query.data.split('#')[1]) if query and query.data and page == None else 1
     logger.debug(f"{page} - page inside handle_pagination")
     paginator = await paginator_func(update, context, user_id, page, **kwargs)
     text = f"{list_text}\nСтраница {page}"

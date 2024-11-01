@@ -56,6 +56,7 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['current_receipt'].pop('selected_product', None)
 
     await delete_message_by_id(update, context, 'product_message_id')
+    await delete_message_by_id(update, context, "receipt_message_id")
 
     await update.message.reply_text(
         "Назад к списку продуктов.",
@@ -63,7 +64,7 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await products_list_pag_callback(update, context)
 
 menu_options: Dict[str, OptionHandler] = {
-        "✅ Подтвердить": confirm_add,
+        "💾 Сохранить": confirm_add,
         "🔙 Назад": back
         }
 
@@ -81,15 +82,22 @@ async def edit_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Handle product removal
     await update.callback_query.answer()
-    # Example: remove from list and update context
+    
+    # Get the product ID and remove it from the list
     product_id = int(update.callback_query.data.split('#')[1])
     context.user_data['current_receipt']['products'] = [
         p for p in context.user_data['current_receipt']['products'] if p["id"] != product_id
     ]
-    await update.callback_query.edit_message_text("Продукт удален из списка.")
+    
+    # Update user data to clear the selected product
     context.user_data["current_receipt"]["selected_product"] = None
-    await products_list_pag_callback(update, context)
 
+    # Notify the user and remove the callback message
+    await update.callback_query.edit_message_text("Продукт удален из списка.")
+    
+
+    # Call `products_list_pag_callback` to update the product list
+    await products_list_pag_callback(update, context)
 
 
 @private_chat_only

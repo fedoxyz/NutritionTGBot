@@ -3,7 +3,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 def confirm_cancel_kb():
     """Generate a confirmation and cancellation keyboard."""
     return ReplyKeyboardMarkup(
-        [["✅ Подтвердить", "🔙 Назад"]],
+        [["💾 Сохранить", "🔙 Назад"]],
         resize_keyboard=True,
         one_time_keyboard=True,
     )
