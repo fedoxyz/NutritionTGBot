@@ -95,6 +95,7 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Notify the user and remove the callback message
     await update.callback_query.edit_message_text("Продукт удален из списка.")
     
+    await delete_message_by_id(update, context, "receipt_message_id")
 
     # Call `products_list_pag_callback` to update the product list
     await products_list_pag_callback(update, context)

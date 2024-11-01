@@ -23,7 +23,9 @@ async def generic_paginator(
     if max_items == 0:
         return False
 
+    logger.debug(f"{page} page inside generic_paginator")
     total_pages = math.ceil(max_items / max_page_size)
+    page = page - 1 if total_pages < page else page
     paginator = InlineKeyboardPaginator(
         total_pages,
         current_page=page,
@@ -88,9 +90,9 @@ async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, 
         logger.debug(f"query.data: {query.data}")
     user_id = update.effective_user.id
     logger.debug(f"{page}")
-    page = int(query.data.split('#')[1]) if query and query.data and page != None else int(query.data.split('#')[1]) if query and query.data and page == None else 1
+    page = query.data.split('#')[1] if query and query.data and page == None else page if query and query.data and page != None else 1
     logger.debug(f"{page} - page inside handle_pagination")
-    paginator = await paginator_func(update, context, user_id, page, **kwargs)
+    paginator = await paginator_func(update, context, user_id, int(page), **kwargs)
     text = f"{list_text}\nСтраница {page}"
     
     if query:

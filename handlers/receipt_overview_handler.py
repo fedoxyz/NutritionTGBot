@@ -5,7 +5,7 @@ import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
-from utils.message_utils import delete_message_by_id, send_message, edit_message
+from utils.message_utils import delete_message_by_id, send_message, edit_message, delete_message_by_id
 from utils.chat_filters import private_chat_only
 from db.functions.receipts import new_receipt
 from keyboards.paginator_kb import handle_pagination
@@ -16,23 +16,24 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     receipt_data = context.user_data["current_receipt"]
     button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
     max_items = len(receipt_data["products"])
+    if max_items < 1:
+        await cancel(update, context)
     logger.debug(f"{max_items} - max items")
     if update.callback_query:
         query = update.callback_query
-        query.answer()
+        await query.answer()
         callback_data = query.data.split('#')
-        page = callback_data[1] if "product" in callback_data[0] else context.user_data["current_receipt"]["current_page"]
+        logger.debug(f'{context.user_data["current_receipt"]["current_page"]}')
+        page = callback_data[1] if "product_" in callback_data[0] else context.user_data["current_receipt"]["current_page"]
     else:
         page = 1
     message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items, page=page)
     context.user_data['receipt_message_id'] = message.message_id
-
+    context.user_data["current_receipt"]["current_page"] = page
     if not update.callback_query:
         text="Выберите опцию"
         await send_message(update, context, text=text, reply_markup=confirm_cancel_kb())
         return
-
-
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -54,7 +55,9 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await delete_message_by_id(update, context, "receipt_message_id")
 
-    await update.message.reply_text(
+    await send_message(
+            update,
+            context,
         "Добавление чека отменено.",
         reply_markup=main_kb(),
     )

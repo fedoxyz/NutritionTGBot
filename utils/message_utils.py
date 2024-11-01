@@ -28,6 +28,7 @@ async def delete_message_by_id(update: Update, context: ContextTypes.DEFAULT_TYP
                 chat_id=update.effective_chat.id,
                 message_id=context.user_data[message_key]
             )
+            context.user_data[message_key] = None
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
         finally:
