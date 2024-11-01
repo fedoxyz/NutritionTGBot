@@ -5,10 +5,10 @@ import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
-from utils.message_utils import send_message, edit_message
+from utils.message_utils import delete_message_by_id, send_message, edit_message
 from utils.chat_filters import private_chat_only
 from db.functions.receipts import new_receipt
-from .pagination_utils import handle_pagination
+from keyboards.paginator_kb import handle_pagination
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -16,9 +16,16 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     receipt_data = context.user_data["current_receipt"]
     button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
     max_items = len(receipt_data["products"])
+    logger.debug(f"{max_items} - max items")
     message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items)
     context.user_data['receipt_message_id'] = message.message_id
-    await send_message(update, context, text="Пожалуйста, подтвердите действие", reply_markup=confirm_cancel_kb())
+    if update.callback_query:
+        text=""
+    else:
+        text="Выберите опцию"
+
+    logger.debug(f"{text} - text")
+    await send_message(update, context, text=text, reply_markup=confirm_cancel_kb())
 
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -32,14 +39,14 @@ async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     else:
         text = "Нет данных для добавления."
 
-    await delete_receipt_message(update, context)
+    await delete_message_by_id(update, context, "receipt_message_id")
 
     await send_message(update, context, text=text, reply_markup=main_kb())
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data.pop('current_receipt', None)
 
-    await delete_receipt_message(update, context)
+    await delete_message_by_id(update, context, "receipt_message_id")
 
     await update.message.reply_text(
         "Добавление чека отменено.",
@@ -49,18 +56,6 @@ menu_options: Dict[str, OptionHandler] = {
         "✅ Подтвердить": confirm_add,
         "❌ Отменить": cancel
         }
-
-async def delete_receipt_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if 'receipt_message_id' in context.user_data:
-        try:
-            await context.bot.delete_message(
-                chat_id=update.effective_chat.id,
-                message_id=context.user_data['receipt_message_id']
-            )
-        except Exception as e:
-            logger.error(f"Error deleting message: {e}")
-        
-        del context.user_data['receipt_message_id']
 
 @private_chat_only
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

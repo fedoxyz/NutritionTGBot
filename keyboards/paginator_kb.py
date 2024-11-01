@@ -3,6 +3,9 @@ from telegram import InlineKeyboardButton
 from ptb_pagination import InlineKeyboardPaginator
 import math
 from logs.logger import logger
+from telegram import Update
+from telegram.ext import ContextTypes
+from utils.message_utils import send_message, edit_message
 
 async def generic_paginator(
     page: int,
@@ -29,9 +32,16 @@ async def generic_paginator(
 
     # Calculate the offset based on the current page
     offset = (page - 1) * max_page_size
-   
+    logger.debug(f"{items} - items inside generic_paginator")
+    logger.debug(f"{offset} - offset inside generic_paginator")
+    logger.debug(f"{max_page_size} - max_page_size inside generic_paginator")
+    logger.debug(f"{max_items == len(items)}")
     items_for_page = items[offset:offset + max_page_size] if max_items == len(items) else items  
     # Generate keyboard with fetched items
+    logger.debug(f"{items_for_page} - items_for_page inside generic_paginator")
+    logger.debug(f"{columns_number} - columns_number inside generic_paginator")
+    logger.debug(f"{text_func} - text_func inside generic_paginator")
+    logger.debug(f"{data_func} - data_func inside generic_paginator")
     item_list_kb = generate_keyboard(items_for_page, columns_number, text_func, data_func)
     paginator.add_before(item_list_kb)
 
@@ -69,3 +79,31 @@ def chunks(lst: List[Any], n: int) -> Generator[List[Any], None, None]:
     """Yield successive n-sized chunks from the list."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
+
+async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, paginator_func, list_text: str, **kwargs) -> None:
+    query = update.callback_query
+    if query:
+        await query.answer()
+        logger.debug(f"query.data: {query.data}")
+    user_id = update.effective_user.id
+    page = int(query.data.split('#')[1]) if query and query.data else 1
+    logger.debug(f"{page} - page inside handle_pagination")
+    paginator = await paginator_func(update, context, user_id, page, **kwargs)
+    text = f"{list_text}\nСтраница {page}"
+    
+    if query:
+        return await edit_message(query, text=text, reply_markup=paginator.markup)
+    else:
+        return await send_message(update, context, text=text, reply_markup=paginator.markup)
+
+async def handle_list_display(update: Update, context: ContextTypes.DEFAULT_TYPE, paginator_func, list_text: str) -> None:
+    text = list_text
+    user_id = update.effective_user.id
+    paginator = await paginator_func(update, context, user_id, 1)
+    if paginator:
+        text += "\nСтраница 1"
+        return await send_message(update, context, text, reply_markup=paginator.markup)
+    else:
+        text += "\nПусто"
+        return await send_message(update, context, text)

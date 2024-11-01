@@ -27,7 +27,7 @@ async def products_paginator(update, context, products: List[dict], page: int, *
             f"🛒 {p['name'][:26] + '...' if len(p['name']) > 26 else p['name']} "
             f"- (кол-во: {p['quantity']})"
         ),
-        data_func=lambda p: "donothing",  # Static callback data
+        data_func=lambda p: f"product#{p['id']}",  
         data_pattern='product_page#{page}',
         max_page_size=MAX_PAGE_SIZE,
         columns_number=COLUMNS_NUMBER,

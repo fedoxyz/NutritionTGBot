@@ -21,12 +21,12 @@ def parse_json_file(file_content: bytes) -> dict:
 
         # Extract product details
         products = [
-            {
+                {   "id": int(i),
                 "name": item["name"],
                 "price": item["price"],
                 "quantity": item["quantity"]
             }
-            for item in data.get("items", [])
+            for i, item in enumerate(data.get("items", []))
         ]
 
         # Return the result dictionary

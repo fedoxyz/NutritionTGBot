@@ -6,7 +6,7 @@ from typing import Dict, Callable, Awaitable
 from utils.message_utils import send_message
 from utils.chat_filters import private_chat_only
 from keyboards.data_source_kb import receipts_paginator, data_source_kb, products_paginator
-from .pagination_utils import handle_pagination, handle_list_display
+from keyboards.paginator_kb import handle_pagination, handle_list_display
 
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
