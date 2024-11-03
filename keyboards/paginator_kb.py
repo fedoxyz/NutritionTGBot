@@ -103,9 +103,9 @@ async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, 
 async def handle_list_display(update: Update, context: ContextTypes.DEFAULT_TYPE, paginator_func, list_text: str) -> None:
     text = list_text
     user_id = update.effective_user.id
-    paginator = await paginator_func(update, context, user_id, 1)
+    paginator, current_page = await paginator_func(update, context, user_id, 1)
     if paginator:
-        text += "\nСтраница 1"
+        text += f"\nСтраница {current_page}"
         return await send_message(update, context, text, reply_markup=paginator.markup)
     else:
         text += "\nПусто"
