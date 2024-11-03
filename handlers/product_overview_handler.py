@@ -18,6 +18,8 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
     query = update.callback_query
     await query.answer()
 
+    await delete_message_by_id(update, context, "receipt_message_id")
+
     # Retrieve the selected product ID and product details
     selected_product_id = int(query.data.split('#')[1])
     selected_product = next((p for p in data["products"] if p["id"] == selected_product_id), None)
@@ -32,13 +34,13 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
         
         await delete_message_by_id(update, context, 'product_message_id')
 
+        await send_message(update, context, text="Выберите что сделать с продуктом", reply_markup=confirm_cancel_kb()) 
         # Send message with inline keyboard
         product_message = await query.message.reply_text(
             text=text,
             reply_markup=product_overview_kb(selected_product_id)
         )
         context.user_data['product_message_id'] = product_message.id
-        await query.message.reply_text(text="Выберите опцию", reply_markup=confirm_cancel_kb()) 
     else:
         await query.edit_message_text("Продукт не найден.")
 
@@ -92,11 +94,9 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Update user data to clear the selected product
     context.user_data["current_receipt"]["selected_product"] = None
 
-    # Notify the user and remove the callback message
+    
     await update.callback_query.edit_message_text("Продукт удален из списка.")
     
-    await delete_message_by_id(update, context, "receipt_message_id")
-
     # Call `products_list_pag_callback` to update the product list
     await products_list_pag_callback(update, context)
 

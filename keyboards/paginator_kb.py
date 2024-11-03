@@ -47,7 +47,7 @@ async def generic_paginator(
     item_list_kb = generate_keyboard(items_for_page, columns_number, text_func, data_func)
     paginator.add_before(item_list_kb)
 
-    return paginator
+    return paginator, page
 
 def generate_keyboard(
     items: List[Any], 
@@ -92,8 +92,8 @@ async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     logger.debug(f"{page}")
     page = query.data.split('#')[1] if query and query.data and page == None else page if query and query.data and page != None else 1
     logger.debug(f"{page} - page inside handle_pagination")
-    paginator = await paginator_func(update, context, user_id, int(page), **kwargs)
-    text = f"{list_text}\nСтраница {page}"
+    paginator, current_page = await paginator_func(update, context, user_id, int(page), **kwargs)
+    text = f"{list_text}\nСтраница {current_page}"
     
     if query:
         return await edit_message(query, text=text, reply_markup=paginator.markup)

@@ -13,27 +13,41 @@ from keyboards.paginator_kb import handle_pagination
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    is_product_page_callback = False
+
     receipt_data = context.user_data["current_receipt"]
+
     button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
+
     max_items = len(receipt_data["products"])
+
+    logger.debug(f"{max_items} - max items")
     if max_items < 1:
         await cancel(update, context)
-    logger.debug(f"{max_items} - max items")
+        return
+
     if update.callback_query:
         query = update.callback_query
         await query.answer()
         callback_data = query.data.split('#')
-        logger.debug(f'{context.user_data["current_receipt"]["current_page"]}')
-        page = callback_data[1] if "product_" in callback_data[0] else context.user_data["current_receipt"]["current_page"]
+        logger.debug(f"{callback_data} - callback_data inside products list pag callback")
+        logger.debug(f'{context.user_data["current_receipt"]["current_page"]} - current_page in user_data')
+        if 'product_page' in callback_data[0]:
+            page = callback_data[1]
+            is_product_page_callback = True
+        else:
+            page = context.user_data["current_receipt"]["current_page"]
     else:
         page = 1
+    logger.debug(f"page before handle_pagination {page}")
     message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items, page=page)
     context.user_data['receipt_message_id'] = message.message_id
     context.user_data["current_receipt"]["current_page"] = page
-    if not update.callback_query:
-        text="Выберите опцию"
-        await send_message(update, context, text=text, reply_markup=confirm_cancel_kb())
+    logger.debug(f"{is_product_page_callback} - is product page callback")
+    if is_product_page_callback:
         return
+    else:
+        await send_message(update, context, text="Выберите опцию", reply_markup=confirm_cancel_kb())
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
