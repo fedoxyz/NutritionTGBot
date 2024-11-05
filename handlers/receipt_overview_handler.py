@@ -49,6 +49,16 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     else:
         await send_message(update, context, text="Выберите опцию", reply_markup=confirm_cancel_kb())
 
+async def select_receipt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    return
+#    if update.callback_query:
+#        query = update.callback_query
+#        await query.answer()
+#        callback_data = query.data.split('#')
+#        if 'receipt' in callback_data[0]:
+    #        receipt_data = fetch_user_receipt()
+    #        context.user_data["current_receipt"] = 
+
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     receipt_data = context.user_data["current_receipt"]  # Retrieve and remove the temporary data

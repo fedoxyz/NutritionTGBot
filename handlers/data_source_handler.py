@@ -15,6 +15,13 @@ async def receipts_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     await handle_pagination(update, context, receipts_paginator, "Список чеков:")
 
 async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    context.user_data['current_receipt'] = {
+            'products': data["products"],
+            'receipt_date': data["receipt_date"],
+            'current_page': 1,
+            'editing_mode': False,
+            'selected_product': None
+        }
     await handle_pagination(update, context, products_paginator, "Список купленных продуктов:")
 
 async def data_source(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

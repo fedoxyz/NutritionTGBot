@@ -29,7 +29,7 @@ async def receipts_paginator(update, context, user_id: int, page: int) -> Union[
         columns_number=COLUMNS_NUMBER,
         items=receipts,
         text_func=lambda r: f"Время на чеке: {r.time}",
-        data_func=lambda r: f"{r.id}",
+        data_func=lambda r: f"receipt#{r.id}",
         data_pattern='receipts_page#{page}',
         max_items=max_items
     )
@@ -48,7 +48,7 @@ async def products_paginator(update, context, user_id: int, page: int) -> Union[
             f"🛒 {p.name[:26] + '...' if len(p.name) > 26 else p.name} "
             f"- (кол-во: {p.quantity})"
         ),
-        data_func=lambda p: f"{p.id}",
+        data_func=lambda p: f"product#{p.id}",
         data_pattern='products_page#{page}',
         max_items=max_items
     )

@@ -1,3 +1,4 @@
+from db.functions.products import fetch_user_products
 from keyboards.main_kb import main_kb
 from logs.logger import logger
 import re
@@ -14,7 +15,7 @@ from .receipt_overview_handler import products_list_pag_callback
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def product_overview_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = context.user_data["current_receipt"]
+    user_id = update.effective_user.id
     query = update.callback_query
     await query.answer()
 
@@ -22,6 +23,8 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
 
     # Retrieve the selected product ID and product details
     selected_product_id = int(query.data.split('#')[1])
+
+    data = context.user_data["current_receipt"]
     selected_product = next((p for p in data["products"] if p["id"] == selected_product_id), None)
     
     # Update context with selected product
@@ -46,13 +49,23 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
 
 async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    
-    context.user_data["current_receipt"] = {
-        "selected_product": None,
-        }
+    receipt_data = context.user_data.get("current_receipt")
 
-    await delete_message_by_id(update, context, 'product_message_id')
+    if receipt_data:
+        # Check if this is a new receipt or an existing one by checking for an 'id' field
+        if "id" in receipt_data:
+            # Existing receipt, so update it
+            success = await update_receipt(user_id, receipt_data)
+            text = "Чек успешно изменен." if success else "Ошибка при обновлении чека. Попробуйте снова."
+        else:
+            # New receipt, so add it
+            success = await new_receipt(user_id, receipt_data)
+            text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека. Попробуйте снова."
+    else:
+        text = "Нет данных для добавления."
 
+    await delete_message_by_id(update, context, "receipt_message_id")
+    await send_message(update, context, text=text, reply_markup=reply_markup)
 
 async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['current_receipt'].pop('selected_product', None)
