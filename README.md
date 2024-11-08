@@ -41,12 +41,3 @@ docker compose up --build
 ```
 docker compose up --build -d
 ```
-
-При успешном запуске всех контейнеров:
-```
-[+] Running 4/4
- ✔ Network nutritiontgbot_default  Created                  xxx.3s
- ✔ Container postgres-container    Started                  xxx.6s
- ✔ Container ollama-container      Started                  xxx.6s
- ✔ Container bot-container         Started                  xxx.6s
-```
