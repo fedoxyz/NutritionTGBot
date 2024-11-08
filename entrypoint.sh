@@ -17,7 +17,7 @@ ollama pull llama3.2
 echo "🟢 Done!"
 
 # Create a ready file to indicate that models have been pulled
-touch /tmp/ollama_ready
+touch /tmp/ollama_ready.tmp
 
 # Wait for Ollama process to finish
 wait $pid
