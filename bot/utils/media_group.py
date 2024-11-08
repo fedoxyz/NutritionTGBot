@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
-from logs.logger import logger
+from logger import logger
 
 MEDIA_GROUP_TIMEOUT = 1.0  # 1 second timeout
 

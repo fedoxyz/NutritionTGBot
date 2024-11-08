@@ -2,7 +2,7 @@ from typing import Callable, List, Any, Union, Generator
 from telegram import InlineKeyboardButton
 from ptb_pagination import InlineKeyboardPaginator
 import math
-from logs.logger import logger
+from logger import logger
 from telegram import Update
 from telegram.ext import ContextTypes
 from utils.message_utils import send_message, edit_message

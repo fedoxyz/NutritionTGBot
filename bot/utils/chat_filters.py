@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
 
-from logs.logger import logger
+from logger import logger
 
 def is_private_chat(update: Update) -> bool:
     return update.effective_chat.type == ChatType.PRIVATE

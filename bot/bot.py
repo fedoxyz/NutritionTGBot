@@ -1,5 +1,5 @@
 #/usr/bin/env python3
-from logs.logger import logger
+from logger import logger
 from db import init_db
 import asyncio
 from telegram.ext import ApplicationBuilder

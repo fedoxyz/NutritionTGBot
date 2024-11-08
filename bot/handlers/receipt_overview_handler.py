@@ -1,6 +1,6 @@
 from keyboards.main_kb import main_kb
 from keyboards.receipt_kb import confirm_cancel_kb, products_paginator 
-from logs.logger import logger
+from logger import logger
 import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler

@@ -2,7 +2,7 @@ from typing import List, Literal
 from db import db, Product, check_product_association, Receipt
 from sqlalchemy.future import select
 from sqlalchemy import desc
-from logs.logger import logger
+from logger import logger
 from datetime import datetime
 from sqlalchemy import and_
 

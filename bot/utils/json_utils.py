@@ -1,5 +1,5 @@
 import json
-from logs.logger import logger
+from logger import logger
 from datetime import datetime
 
 def parse_json_file(file_content: bytes) -> dict:

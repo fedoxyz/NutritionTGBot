@@ -4,7 +4,7 @@ from db.functions.products import fetch_user_products
 from ptb_pagination import InlineKeyboardPaginator
 from typing import Union
 from .paginator_kb import generic_paginator
-from logs.logger import logger
+from logger import logger
 
 COLUMNS_NUMBER = 1
 MAX_PAGE_SIZE = 6

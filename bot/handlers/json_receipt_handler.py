@@ -1,4 +1,4 @@
-from logs.logger import logger
+from logger import logger
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable

@@ -44,7 +44,7 @@ services:
     container_name: bot-container
     working_dir: /bot
     volumes:
-      - ./:/bot
+      - ./bot/:/bot
     env_file:
       - .env
 

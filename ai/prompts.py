@@ -35,7 +35,7 @@ def create_parser_prompt(
 
     return generate_prompt
 
-def generate_vision_query(input_data: bytes) -> Tuple[str, List[Dict[str, str]]]:
+def generate_vision_query(input_data: bytes) -> Tuple[Tuple[str, List[Dict[str, str]]], Dict[str, str]]:
     image_data = base64.b64encode(input_data).decode("utf-8")
     query = (
              "user", 
@@ -51,7 +51,7 @@ def generate_vision_query(input_data: bytes) -> Tuple[str, List[Dict[str, str]]]
             }
     return query, data 
 
-def generate_classification_query(receipt_json: Dict) -> Tuple[str, List[str]]:
+def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[str]], Dict[str, str]]:
     query_data = f"Given the following list of products, classify each product with its category:\nPRODUCTS: {json.dumps(receipt_json)}"
     query = (
             "user",

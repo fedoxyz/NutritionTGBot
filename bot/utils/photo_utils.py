@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 from utils.json_utils import parse_json_file
 #import requests
-from logs.logger import logger
+from logger import logger
 
 
 def qr_process_receipt(photo_bytes: bytes) -> Optional[Dict]:

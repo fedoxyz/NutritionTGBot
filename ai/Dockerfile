@@ -17,5 +17,7 @@ EXPOSE 50051
 COPY ./ai/wait_for_ollama.sh /wait_for_ollama.sh
 RUN chmod +x /wait_for_ollama.sh
 
+ENV PYTHONPATH=/
+
 # Start the application after waiting
 CMD ["/bin/bash", "-c", "sh ./wait_for_ollama.sh && python main.py"]

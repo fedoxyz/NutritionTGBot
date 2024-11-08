@@ -1,7 +1,7 @@
 from telegram import Update, InputMediaPhoto
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
-from logs.logger import logger
+from logger import logger
 
 async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, reply_markup=None, parse_mode="Markdown", **kwargs):
     # Check for update type and send a reply accordingly

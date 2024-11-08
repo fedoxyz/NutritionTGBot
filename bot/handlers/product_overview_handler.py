@@ -1,6 +1,6 @@
 from db.functions.products import fetch_user_products
 from keyboards.main_kb import main_kb
-from logs.logger import logger
+from logger import logger
 import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler

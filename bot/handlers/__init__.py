@@ -2,7 +2,7 @@ from typing import Awaitable, Callable, Dict
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from logs.logger import logger
+from logger import logger
 
 from .start_handler import setup_start_handler
 from .menu_handler import setup_menu_handlers

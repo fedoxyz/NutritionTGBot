@@ -2,7 +2,6 @@ from telegram import ReplyKeyboardMarkup
 from ptb_pagination import InlineKeyboardPaginator
 from typing import List, Union
 from .paginator_kb import generic_paginator  # Assuming this is where it's defined
-import asyncio
 
 COLUMNS_NUMBER = 1  # One product per row
 MAX_PAGE_SIZE = 7  # Products per page

@@ -3,7 +3,7 @@ from db import db, User, Receipt, Product, check_product_association
 from sqlalchemy.future import select
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-from logs.logger import logger
+from logger import logger
 
 MAX_PAGE_SIZE = 6
 

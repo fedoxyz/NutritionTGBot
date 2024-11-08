@@ -1,4 +1,4 @@
-from logs.logger import logger
+from logger import logger
 
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters, ConversationHandler

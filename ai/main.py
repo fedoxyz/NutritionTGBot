@@ -2,6 +2,7 @@
 from typing import Callable, TypeVar
 from pipelines import create_vision_pipeline, create_classification_pipeline
 from functools import lru_cache
+from logger import logger
 
 T = TypeVar('T')  # Input type
 R = TypeVar('R')  # Result type
@@ -30,6 +31,7 @@ classify_receipt_products = create_lazy_pipeline(
 )
 
 
+### ЗДЕСЬ ЭКСПЕРИМЕНТЫ
 import requests
 from PIL import Image
 import io
@@ -61,10 +63,10 @@ def resize_and_compress_image(response):
 image_bytes = resize_and_compress_image(response)
 
 # Step 4: Use the image bytes with process_receipt
-print("AI Container")
+logger.info("AI Container before process_receipt")
 result = process_receipt(image_bytes)
 
 # Step 5: Print the results
-print(result.data)
-print(result.success)
-print(result.error)
+logger.debug(result.data)
+logger.debug(result.success)
+logger.debug(result.error)
