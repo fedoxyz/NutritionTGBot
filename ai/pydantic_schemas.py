@@ -14,4 +14,3 @@ class ClassifiedProduct(Product):
 class Receipt(BaseModel):
     date: datetime = Field(description="Time and date of receipt")  # 'required=True' is implicit
     products: List[Product] = Field(description="Products in receipt")  # 'required=True' is implicit
-

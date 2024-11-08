@@ -48,7 +48,7 @@ def resize_and_compress_image(response):
     image = Image.open(image_bytes)
 
     # Resize the image while maintaining the aspect ratio
-    desired_width = 800
+    desired_width = 1120
     aspect_ratio = image.height / image.width
     new_height = int(desired_width * aspect_ratio)
     resized_image = image.resize((desired_width, new_height))

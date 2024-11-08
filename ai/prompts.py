@@ -3,7 +3,7 @@ import base64
 from typing import Dict, Callable, TypeVar, Type, Any, Tuple, List
 from pydantic import BaseModel
 from langchain.prompts import ChatPromptTemplate
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from pydantic_schemas import Receipt, ClassifiedProduct
 
 T = TypeVar('T', bound=BaseModel)
@@ -17,7 +17,7 @@ def create_parser_prompt(
     Create a universal prompt generator function using ChatPromptTemplate,
     supporting both text and image inputs with a customizable system prompt.
     """
-    parser = PydanticOutputParser(pydantic_object=pydantic_model)
+    parser = JsonOutputParser(pydantic_object=pydantic_model)
     format_instructions = parser.get_format_instructions()
     
     def generate_prompt(input_data: Any) -> ChatPromptTemplate:
@@ -68,12 +68,12 @@ def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[s
 # Create specialized prompt generators
 create_classification_prompt = create_parser_prompt(
     ClassifiedProduct,
-    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' and categories' classes. Output information purely and solely in JSON format.",
+    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' and categories' classes. Output information purely and solely in JSON format. {format_instructions}",
     query_generator=generate_classification_query,
 )
 
 create_vision_prompt = create_parser_prompt(
     Receipt,
-    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information. Output information purely and solely in JSON format.",
+    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information. Output information purely and solely in JSON format. {format_instructions}",
     query_generator=generate_vision_query,
 )

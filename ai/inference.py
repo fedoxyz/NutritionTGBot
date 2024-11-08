@@ -2,16 +2,17 @@ from typing import Callable, TypeVar, Any, Union
 from prompts import create_classification_prompt, create_vision_prompt
 from utils import ProcessingResult
 from pydantic_schemas import Receipt, ClassifiedProduct
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from langchain.schema import AIMessage
 import json
 import traceback
+from logger import logger
 
 T = TypeVar('T')  # Input type
 
 def create_inference_function(
     prompt_generator: Callable[[T], str],
-    parser: PydanticOutputParser,
+    parser: JsonOutputParser,
     parse_multiple: bool = False
 ) -> Callable[[T, Any], ProcessingResult]:
     """Create an inference function with proper response handling."""
@@ -25,13 +26,12 @@ def create_inference_function(
     def process_with_model(input_data: T, model: Any) -> ProcessingResult:
         try:
             prompt = prompt_generator(input_data)
+            logger.debug(f"prompt - {prompt}")
             response = model.invoke(prompt)
-            print(response)
-            print(dir(response))
+            logger.debug(response)
+            logger.debug(dir(response))
             # Extract content from response
             content = extract_content(response)
-            print(content)
-            print(dir(content))
             # Ensure content is valid JSON
             if not content.strip().startswith('{'):
                 raise ValueError(f"Invalid JSON response: {content[:100]}...")
@@ -58,11 +58,11 @@ def create_inference_function(
 # Create specialized inference functions
 process_image_with_model = create_inference_function(
     prompt_generator=create_vision_prompt,
-    parser=PydanticOutputParser(pydantic_object=Receipt)
+    parser=JsonOutputParser(pydantic_object=Receipt)
 )
 
 classify_products_with_llm = create_inference_function(
     prompt_generator=create_classification_prompt,
-    parser=PydanticOutputParser(pydantic_object=ClassifiedProduct),
+    parser=JsonOutputParser(pydantic_object=ClassifiedProduct),
     parse_multiple=True
 )

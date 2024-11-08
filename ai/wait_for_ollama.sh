@@ -6,3 +6,5 @@ while [ ! -f /tmp/ollama_ready.tmp ]; do
   sleep 2
 done
 echo "Ollama is ready. Starting the application..."
+
+rm /tmp/ollama_ready.tmp
