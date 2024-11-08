@@ -6,44 +6,11 @@ git clone https://github.com/fedoxyz/NutritionTGBot
 cd NutritionTGBot
 ```
 
-## venv
-
-Создать виртуальную среду:
-```
-virtualenv venv
-```
-
-Активировать виртуальную среду:
-Linux:
-```
-source venv/bin/activate
-```
-
-Установить необходимые библиотеки
-```
-pip install -r requirements.txt
-```
-
-Для использования environment переменных:
-```
-mv demo.env .env
-```
-
-.env должен содержать URL базы данных и токен Telegram бота
-
-Запуск телеграм бота:
-Linux:
-```
-python3 bot.py
-```
-
-
 ## Docker Install
 Для запуска бота через Docker:
 Запуск Docker контейнеров на локальной машине.
 
-1. Установить Docker
-2. Запустить
+1. Установить `docker` и `docker compose`
 
 Для ollama контейнера установите `nvidia-container-toolkit`
 
@@ -52,11 +19,19 @@ Linux Ubuntu
 sudo apt-get install -y nvidia-container-toolkit
 ```
 
+
 Конфигурация для использования Nvidia в контейнере 
 ```
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
+
+Для использования environment переменных:
+```
+mv demo.env .env
+```
+
+.env должен содержать URL базы данных и токен Telegram бота
 
 Build контейнеров и запуск контейнеров
 ```
