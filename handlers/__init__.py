@@ -13,6 +13,7 @@ from .data_source_handler import setup_data_source_handlers
 from .json_receipt_handler import setup_json_receipt_handlers
 from .receipt_overview_handler import setup_receipt_process_handlers
 from .product_overview_handler import setup_product_overview_handlers
+from .photo_receipt_handler import setup_photo_receipt_handlers
 
 all_handlers = [
     setup_start_handler,
@@ -23,7 +24,8 @@ all_handlers = [
     setup_data_source_handlers,
     setup_json_receipt_handlers,
     setup_receipt_process_handlers,
-    setup_product_overview_handlers
+    setup_product_overview_handlers,
+    setup_photo_receipt_handlers
 ]
 
 def setup_all_handlers(app):

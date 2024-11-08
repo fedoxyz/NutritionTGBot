@@ -30,7 +30,6 @@ def create_parser_prompt(
             ], 
             partial_variables={"format_instructions": format_instructions},
         )
-        print(prompt)
         return prompt.invoke(invoke_data)
 
     return generate_prompt
@@ -68,12 +67,12 @@ def generate_classification_query(receipt_json: Dict) -> Tuple[str, List[str]]:
 # Create specialized prompt generators
 create_classification_prompt = create_parser_prompt(
     ClassifiedProduct,
-    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' and categories' classes. Output information purely and solely in JSON format.",
+    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' and categories' classes.",
     query_generator=generate_classification_query,
 )
 
 create_vision_prompt = create_parser_prompt(
     Receipt,
-    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information. Output information purely and solely in JSON format.",
+    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information.",
     query_generator=generate_vision_query,
 )

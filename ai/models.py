@@ -1,4 +1,4 @@
-from langchain_experimental.llms.ollama_functions import OllamaFunctions
+from langchain_ollama import ChatOllama
 from functools import partial
 
 ModelConfig = dict[str, str | float]
@@ -17,10 +17,11 @@ def create_base_model_config(
 def create_model(
     model_id: str,
     config: ModelConfig
-) -> OllamaFunctions:
+) -> ChatOllama:
     """Create a model with given configuration."""
-    return OllamaFunctions(
+    return ChatOllama(
         model=model_id,
+        base_url="http://ollama-container:11434",
         **config
     )
 

@@ -1,9 +1,11 @@
-from typing import Callable, TypeVar, Any
+from typing import Callable, TypeVar, Any, Union
 from prompts import create_classification_prompt, create_vision_prompt
 from utils import ProcessingResult
 from pydantic_schemas import Receipt, ClassifiedProduct
 from langchain.output_parsers import PydanticOutputParser
+from langchain.schema import AIMessage
 import json
+import traceback
 
 T = TypeVar('T')  # Input type
 
@@ -12,25 +14,44 @@ def create_inference_function(
     parser: PydanticOutputParser,
     parse_multiple: bool = False
 ) -> Callable[[T, Any], ProcessingResult]:
-    """Create an inference function with error handling."""
+    """Create an inference function with proper response handling."""
+    
+    def extract_content(response: Union[str, AIMessage]) -> str:
+        """Extract content string from various response types."""
+        if isinstance(response, AIMessage):
+            return response.content
+        return response
     
     def process_with_model(input_data: T, model: Any) -> ProcessingResult:
         try:
             prompt = prompt_generator(input_data)
-            response = model(prompt)
-            
+            response = model.invoke(prompt)
+            print(response)
+            print(dir(response))
+            # Extract content from response
+            content = extract_content(response)
+            print(content)
+            print(dir(content))
+            # Ensure content is valid JSON
+            if not content.strip().startswith('{'):
+                raise ValueError(f"Invalid JSON response: {content[:100]}...")
+                
             if parse_multiple:
-                result = [
-                    parser.parse(item)
-                    for item in json.loads(response)
-                ]
+                try:
+                    json_data = json.loads(content)
+                    if not isinstance(json_data, list):
+                        json_data = [json_data]
+                    result = [parser.parse(json.dumps(item)) for item in json_data]
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"Failed to parse JSON response: {str(e)}")
             else:
-                result = parser.parse(response)
+                result = parser.parse(content)
                 
             return ProcessingResult(True, result)
             
         except Exception as e:
-            return ProcessingResult(False, None, str(e))
+            error_msg = f"Error processing inference: {str(e)}\n{traceback.format_exc()}"
+            return ProcessingResult(False, None, error_msg)
     
     return process_with_model
 

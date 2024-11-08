@@ -1,2 +1,4 @@
 langchain
-langchain-experimental
+langchain-ollama
+six
+pillow

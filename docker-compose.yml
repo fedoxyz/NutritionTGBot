@@ -1,15 +1,17 @@
-
 services:
   ollama:
     image: ollama/ollama
     container_name: ollama-container
     volumes:
       - ollama:/root/.ollama
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./tmp:/tmp  # Shared volume for readiness check
     ports:
       - 11434:11434
     runtime: nvidia  # Использование GPU runtime
     environment:
       - NVIDIA_VISIBLE_DEVICES=all  # Указываем все доступные GPU
+    entrypoint: ["/usr/bin/bash", "/entrypoint.sh"]
 
   postgres:
     image: postgres
@@ -22,6 +24,18 @@ services:
       POSTGRES_PASSWORD: "db_password"
     ports:
       - "5432:5432"
+  
+  ai:
+    build:
+      context: ./
+      dockerfile: ai/Dockerfile
+    container_name: ai-container
+    working_dir: /ai
+    volumes:
+      - ./ai/:/ai
+      - ./tmp:/tmp  # Shared volume for readiness check
+    ports:
+      - "50051:50051"
 
   bot:
     build:

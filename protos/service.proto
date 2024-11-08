@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+service YourService {
+  rpc ProcessReceipt (ReceiptRequest) returns (ProcessingResult);
+  rpc ClassifyProducts (ClassifyRequest) returns (ProcessingResult);
+}
+
+message ReceiptRequest {
+  bytes image_data = 1;
+}
+
+message ClassifyRequest {
+  string products_json = 1; 
+}
+
+message ProcessingResult {
+  bool success = 1;
+  string data = 2;
+  string error = 3;
+}

@@ -6,3 +6,8 @@ class ProcessingResult:
         self.data = data
         self.error = error
 
+    def __str__(self):
+        if self.success:
+            return f"Success: {self.success}"
+        else:
+            return f"Failed: {self.error}"
