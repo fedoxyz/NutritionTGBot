@@ -7,6 +7,7 @@ from utils.message_utils import delete_message_by_id, send_message
 from utils.photo_utils import qr_process_receipt
 from grpc_client import GRPCClient
 import json
+from datetime import datetime
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -42,10 +43,10 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     products_with_ids = [
         {**product, 'id': index + 1} for index, product in enumerate(data['products'])
     ]
-    
+    receipt_date = datetime.strptime(data["date"], "%d-%m-%y %H:%M")    
     context.user_data['current_receipt'] = {
         'products': products_with_ids,
-        'receipt_date': data['date'],
+        'receipt_date': receipt_date,
         'current_page': 1,
         'editing_mode': False,
         'selected_product': None
