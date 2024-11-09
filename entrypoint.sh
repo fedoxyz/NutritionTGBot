@@ -9,6 +9,7 @@ pid=$!
 sleep 5
 
 echo "🔴 Retrieve LLAMA3.2-vision model..."
+#ollama pull jyan1/paligemma-mix-224
 ollama pull llama3.2-vision
 echo "🟢 Done!"
 

@@ -26,10 +26,9 @@ def create_inference_function(
     def process_with_model(input_data: T, model: Any) -> ProcessingResult:
         try:
             prompt = prompt_generator(input_data)
-            logger.debug(f"prompt - {prompt}")
+            #logger.debug(f"prompt - {prompt}")
             response = model.invoke(prompt)
             logger.debug(response)
-            logger.debug(dir(response))
             # Extract content from response
             content = extract_content(response)
             # Ensure content is valid JSON

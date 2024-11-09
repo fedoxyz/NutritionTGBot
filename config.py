@@ -8,4 +8,5 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 IS_DEBUG = os.getenv("DEBUG")
 
+GRPC_SERVER = os.getenv("GRPC_SERVER")
 

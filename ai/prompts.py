@@ -11,7 +11,7 @@ T = TypeVar('T', bound=BaseModel)
 def create_parser_prompt(
     pydantic_model: Type[T],
     system_prompt: str,
-    query_generator: Callable[[Any], Tuple[str, List[Any]]],
+    query_generator: Callable[[Any], Tuple[Tuple[str, List[Any]], Dict[str, str]]],
 ) -> Callable[[Any], ChatPromptTemplate]:
     """
     Create a universal prompt generator function using ChatPromptTemplate,
@@ -64,6 +64,7 @@ def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[s
             }
 
     return query, data
+
 
 # Create specialized prompt generators
 create_classification_prompt = create_parser_prompt(

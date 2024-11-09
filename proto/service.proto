@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-service YourService {
+service Pipelines {
   rpc ProcessReceipt (ReceiptRequest) returns (ProcessingResult);
   rpc ClassifyProducts (ClassifyRequest) returns (ProcessingResult);
 }

@@ -1,7 +1,25 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, TypeVar
 from models import create_vision_model, create_classification_model
 from utils import ProcessingResult
 from inference import process_image_with_model, classify_products_with_llm
+from functools import lru_cache
+
+T = TypeVar('T')  # Input type
+R = TypeVar('R')  # Result type
+
+def create_lazy_pipeline(
+    creator: Callable[[], Callable[[T], R]]
+) -> Callable[[T], R]:
+    """Create a lazy-loaded pipeline with caching."""
+    
+    @lru_cache(maxsize=1)
+    def get_pipeline() -> Callable[[T], R]:
+        return creator()
+    
+    def pipeline(input_data: T) -> R:
+        return get_pipeline()(input_data)
+    
+    return pipeline
 
 def create_vision_pipeline() -> Callable[[bytes], ProcessingResult]:
     """Create vision pipeline for receipt processing."""
@@ -17,3 +35,12 @@ def create_classification_pipeline() -> Callable[[Dict], ProcessingResult]:
     model = create_classification_model()
 
     return lambda receipt_data: classify_products_with_llm(model, receipt_data)
+
+process_receipt = create_lazy_pipeline(
+    lambda: create_vision_pipeline()
+)
+
+classify_receipt_products = create_lazy_pipeline(
+    lambda: create_classification_pipeline()
+)
+
