@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 from typing import Callable, Awaitable
 from .receipt_overview_handler import products_list_pag_callback
-from utils.message_utils import delete_message_by_id
+from utils.message_utils import delete_message_by_id, send_message
 from utils.photo_utils import qr_process_receipt
 from grpc_client import GRPCClient
 import json
@@ -14,7 +14,7 @@ grpc_client = GRPCClient()
 
 async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.message.photo:
-        await update.message.reply_text("Пожалуйста, отправьте фотографию чека.")
+        await send_message(update, context, "Пожалуйста, отправьте фотографию чека.")
         return
 
     await delete_message_by_id(update, context, 'receipt_message_id')
@@ -22,7 +22,8 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     photo = update.message.photo[-1]
     photo_file = await photo.get_file()
     photo_bytes = bytes(await photo_file.download_as_bytearray())
-
+    
+    await send_message(update, context, text="Ваша фотография обрабатывается, пожалуйста подождите.")
     # Try processing with QR code first
     data = qr_process_receipt(photo_bytes)
     if not data:
@@ -30,11 +31,11 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
         if response.success:
             data = json.loads(response.data)
         else:
-            await update.message.reply_text(f"Error processing receipt: {response.error}")
+            await send_message(update, context, "Возникла ошибка при обработке фотографии. Попробуйте снова.")
             return
     
     if not data or 'products' not in data or not data['products']:
-        await update.message.reply_text("Не удалось распознать чек или продукты отсутствуют.")
+        await send_message(update, context, "Не удалось распознать чек или продукты отсутствуют.") 
         return
     
     # Append 'id' to each product

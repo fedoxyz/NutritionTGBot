@@ -75,6 +75,6 @@ create_classification_prompt = create_parser_prompt(
 
 create_vision_prompt = create_parser_prompt(
     Receipt,
-    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information. Output information purely and solely in JSON format. {format_instructions}",
+    system_prompt="You are a vision assistant for extracting bought products from user's receipt photo and parse this information. The receipts are in Russian, but can contain latin characters in names. Output information purely and solely in JSON format and be as precise as you can with product names. {format_instructions}",
     query_generator=generate_vision_query,
 )

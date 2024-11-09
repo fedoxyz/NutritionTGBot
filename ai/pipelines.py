@@ -1,6 +1,6 @@
 from typing import Callable, Dict, TypeVar
 from models import create_vision_model, create_classification_model
-from utils import ProcessingResult
+from utils import ProcessingResult, resize_image_bytes
 from inference import process_image_with_model, classify_products_with_llm
 from functools import lru_cache
 
@@ -26,6 +26,7 @@ def create_vision_pipeline() -> Callable[[bytes], ProcessingResult]:
     model = create_vision_model()
 
     def vision_pipeline(input_data: bytes) -> ProcessingResult:
+        #input_data = resize_image_bytes(input_data)
         return process_image_with_model(input_data, model)
 
     return vision_pipeline
