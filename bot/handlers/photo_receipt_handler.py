@@ -8,6 +8,7 @@ from utils.photo_utils import qr_process_receipt
 from grpc_client import GRPCClient
 import json
 from datetime import datetime
+from utils.state_manager import get_current_state, set_current_state
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -17,6 +18,9 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     if not update.message or not update.message.photo:
         await send_message(update, context, "Пожалуйста, отправьте фотографию чека.")
         return
+    elif get_current_state(context) == "PHOTO_PROCESSING":
+        await send_message(update, context, "Ваше фото уже в очереди, пожалуйста подождите или попробуйте позже.")
+        return
 
     await delete_message_by_id(update, context, 'receipt_message_id')
 
@@ -25,6 +29,7 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     photo_bytes = bytes(await photo_file.download_as_bytearray())
     
     await send_message(update, context, text="Ваша фотография обрабатывается, пожалуйста подождите.")
+    set_current_state(context, "PHOTO_PROCESSING")
     # Try processing with QR code first
     data = qr_process_receipt(photo_bytes)
     if not data:
@@ -33,9 +38,11 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
             data = json.loads(response.data)
         else:
             await send_message(update, context, "Возникла ошибка при обработке фотографии. Попробуйте снова.")
+            set_current_state(context, "ERROR")
             return
     
     if not data or 'products' not in data or not data['products']:
+        set_current_state(context, "PHOTO_PROCESSED")
         await send_message(update, context, "Не удалось распознать чек или продукты отсутствуют.") 
         return
     
@@ -51,8 +58,11 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
         'editing_mode': False,
         'selected_product': None
     }
+    set_current_state(context, "PHOTO_PROCESSED")
+
 
     await products_list_pag_callback(update, context)
+    return
 
 # Setup the photo receipt handlers in the application
 def setup_photo_receipt_handlers(application):
