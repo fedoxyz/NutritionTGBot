@@ -1,4 +1,4 @@
-import grpc
+import grpc.aio
 from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult
 from proto.service_pb2_grpc import PipelinesStub
 from config import GRPC_SERVER
@@ -21,15 +21,15 @@ class GRPCClient:
         return cls._instance
 
     def _initialize_channel_and_stub(self):
-        self.channel = grpc.insecure_channel(GRPC_SERVER)
+        self.channel = grpc.aio.insecure_channel(GRPC_SERVER)
         self.stub = PipelinesStub(self.channel)
 
-    def process_receipt(self, image_data):
+    async def process_receipt(self, image_data):
         request = ReceiptRequest(image_data=image_data)
-        response = self.stub.ProcessReceipt(request)
+        response = await self.stub.ProcessReceipt(request)
         return response
 
-    def classify_products(self, products_json):
+    async def classify_products(self, products_json):
         request = ClassifyRequest(products_json=products_json)
-        response = self.stub.ClassifyProducts(request)
+        response = await self.stub.ClassifyProducts(request)
         return response
