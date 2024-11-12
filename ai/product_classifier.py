@@ -1,4 +1,5 @@
 from typing import List, Dict, Callable, TypeVar
+from langchain.prompts import PromptTemplate
 from langchain_neo4j import Neo4jGraph
 from langchain.chains import GraphCypherQAChain
 from functools import lru_cache
