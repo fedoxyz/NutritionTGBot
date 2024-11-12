@@ -51,19 +51,10 @@ def generate_vision_query(input_data: bytes) -> Tuple[Tuple[str, List[Dict[str, 
             }
     return query, data 
 
-from db import GraphDB
 
-def retrieve_related_classes(graph_db: GraphDB, product_line: str) -> List[str]:
-    query = f"MATCH (p:Product)-[:BELONGS_TO]->(c:Category) WHERE p.line CONTAINS '{product_line}' RETURN c.name"
-    result = graph_db.query(query)
-    return [record['c.name'] for record in result]
-
-def generate_classification_query(receipt_json: Dict, graph_db: Optional[GraphDB] = None) -> Tuple[Tuple[str, List[str]], Dict[str, str]]:
+def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[str]], Dict[str, str]]:
     related_classes = []
-    if graph_db:
-        for product_line in receipt_json.keys():
-            related_classes.extend(retrieve_related_classes(graph_db, product_line))
-    query_data = f"Given the following list of products and related classes {related_classes}, classify each product with its category:\nPRODUCTS: {json.dumps(receipt_json)}"
+    query_data = f"Given the following list of products and related classes {related_classes}, classify each product in required format:\nPRODUCTS: {json.dumps(receipt_json)}"
     query = (
             "user",
                 [
