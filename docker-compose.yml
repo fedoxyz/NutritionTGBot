@@ -52,7 +52,7 @@ services:
     image: neo4j:latest
     container_name: neo4j-container
     environment:
-      - NEO4J_AUTH=neo4j/test
+      - NEO4J_AUTH=neo4j/strongpassword123
     ports:
       - "7474:7474"
       - "7687:7687"
