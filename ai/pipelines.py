@@ -1,4 +1,4 @@
-from typing import Callable, Dict, TypeVar
+from typing import Callable, Dict, TypeVar, List
 from models import create_vision_model, create_classification_model
 from utils import ProcessingResult, resize_image_bytes
 from inference import process_image_with_model, classify_products_with_llm
@@ -32,7 +32,7 @@ def create_vision_pipeline() -> Callable[[bytes], ProcessingResult]:
     return vision_pipeline
 
 def create_classification_pipeline() -> Callable[[Dict], ProcessingResult]:
-    """Create classification pipeline for receipt products"""
+    """Create classification pipeline for receipt products."""
     model = create_classification_model()
 
     return lambda receipt_data: classify_products_with_llm(model, receipt_data)

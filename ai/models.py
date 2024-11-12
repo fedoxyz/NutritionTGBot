@@ -27,7 +27,7 @@ def create_model(
 
 create_vision_model = partial(
     create_model,
-    model_id="llama3.2-vision", #"jyan1/paligemma-mix-224",
+    model_id="llama3.2-vision",
     config=create_base_model_config()
 )
 
