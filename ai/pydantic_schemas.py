@@ -9,7 +9,6 @@ class Product(BaseModel):
 
 class ClassifiedProduct(Product):
     product: str = Field(description="Product identifier")  # 'required=True' is implicit
-    category: str = Field(description="Category of the product")  # 'required=True' is implicit
 
 class Receipt(BaseModel):
     date: datetime = Field(description="Time and date of receipt")  # 'required=True' is implicit

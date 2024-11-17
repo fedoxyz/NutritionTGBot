@@ -26,6 +26,7 @@ def create_inference_function(
     def process_with_model(input_data: T, model: Any) -> ProcessingResult:
         try:
             prompt = prompt_generator(input_data)
+            logger.debug(f'prompt frm generator - {prompt}')
             #logger.debug(f"prompt - {prompt}")
             response = model.invoke(prompt)
             logger.debug(response)

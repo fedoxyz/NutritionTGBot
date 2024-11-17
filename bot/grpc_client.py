@@ -2,6 +2,7 @@ import grpc.aio
 from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult
 from proto.service_pb2_grpc import PipelinesStub
 from config import GRPC_SERVER
+from logger import logger
 
 class GRPCClient:
     _instance = None

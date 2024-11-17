@@ -5,7 +5,6 @@ from langchain.chains import GraphCypherQAChain
 from functools import lru_cache
 from prompts import create_classification_prompt_template, generate_classification_query
 from models import create_classification_model
-from utils import ProcessingResult
 
 T = TypeVar('T')  # Input type
 R = TypeVar('R')  # Result type

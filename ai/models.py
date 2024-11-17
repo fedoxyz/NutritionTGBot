@@ -5,13 +5,14 @@ ModelConfig = dict[str, str | float]
 
 def create_base_model_config(
     format: str = "json",
-    temperature: float = 0
+    temperature: float = 0,
 ) -> ModelConfig:
     """Create base model configuration."""
     return {
         "format": format,
         "keep_alive": -1,
-        "temperature": temperature
+        "temperature": temperature,
+        "num_ctx": 32000
     }
 
 def create_model(

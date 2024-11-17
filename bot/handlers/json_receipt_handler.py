@@ -5,8 +5,11 @@ from typing import Dict, Callable, Awaitable
 from utils.json_utils import parse_json_file
 from .receipt_overview_handler import products_list_pag_callback
 from utils.message_utils import delete_message_by_id
+from grpc_client import GRPCClient
+import json
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
+
 
 async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Check if the message contains a document
@@ -34,8 +37,22 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
             'editing_mode': False,
             'selected_product': None
         }
+    
+    products = json.dumps(data["products"], ensure_ascii=False)
+    await classify_test(products)
 
     await products_list_pag_callback(update, context)
+
+async def classify_test(products):
+    grpc_client = GRPCClient()
+
+    logger.debug(f"products - {products}")
+
+    """Process the photo and return the data."""
+    response = await grpc_client.classify_products(products)
+
+    logger.debug(f"{json.loads(response.data)}")
+
 
 
 def setup_json_receipt_handlers(application):

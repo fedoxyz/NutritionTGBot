@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic_schemas import Receipt, ClassifiedProduct
+from logger import logger
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -52,9 +53,17 @@ def generate_vision_query(input_data: bytes) -> Tuple[Tuple[str, List[Dict[str, 
     return query, data 
 
 
-def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[str]], Dict[str, str]]:
-    related_classes = []
-    query_data = f"Given the following list of products and related classes {related_classes}, classify each product in required format:\nPRODUCTS: {json.dumps(receipt_json)}"
+def generate_classification_query(receipt_json: str) -> Tuple[Tuple[str, List[str]], Dict[str, str]]:
+    # Read the content of products.txt
+    try:
+        with open('products.txt', 'r') as file:
+            products_content = file.read()
+    except FileNotFoundError:
+        products_content = "No products file found."
+    logger.debug(f"receipt json inside query generation {receipt_json}")
+    products_content_clean = products_content.replace('\n', ', ').replace('\t', ' ')
+    # Combine the receipt data and the products content
+    query_data = f"Given the following list of products separated by comma:\n {products_content_clean} \n\n Here is a json string with products that you need to classify:\n {receipt_json}"
     query = (
             "user",
                 [
@@ -71,7 +80,7 @@ def generate_classification_query(receipt_json: Dict) -> Tuple[Tuple[str, List[s
 # Create specialized prompt generators
 create_classification_prompt = create_parser_prompt(
     ClassifiedProduct,
-    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' and categories' classes. Output information purely and solely in JSON format. {format_instructions}",
+    system_prompt="You are a classificator of products in user's receipts. Please classify the given entries from receipt with precisely correct products' classes. Output information purely and solely in JSON format. {format_instructions}",
     query_generator=generate_classification_query,
 )
 

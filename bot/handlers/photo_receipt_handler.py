@@ -12,7 +12,6 @@ from utils.state_manager import get_current_state, set_current_state
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
-grpc_client = GRPCClient()
 
 async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.message.photo:
@@ -34,7 +33,7 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     set_current_state(context, "PHOTO_PROCESSING")
 
     # Process the photo
-    data = await process_photo(photo_bytes, context)
+    data = await process_photo(photo_bytes, update, context)
 
     if not data or 'products' not in data or not data['products']:
         set_current_state(context, "PHOTO_PROCESSED")
@@ -58,8 +57,9 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
     await products_list_pag_callback(update, context)
     return
 
-async def process_photo(photo_bytes, context):
+async def process_photo(photo_bytes, update, context):
     """Process the photo and return the data."""
+    grpc_client = GRPCClient()
     # Try processing with QR code first
     data = qr_process_receipt(photo_bytes)
     if not data:
@@ -67,7 +67,7 @@ async def process_photo(photo_bytes, context):
         if response.success:
             data = json.loads(response.data)
         else:
-            await send_message(context, "Возникла ошибка при обработке фотографии. Попробуйте снова.")
+            await send_message(update, context, "Возникла ошибка при обработке фотографии. Попробуйте снова.")
             set_current_state(context, "ERROR")
             return None
     return data

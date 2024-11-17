@@ -35,7 +35,7 @@ def create_classification_pipeline() -> Callable[[Dict], ProcessingResult]:
     """Create classification pipeline for receipt products."""
     model = create_classification_model()
 
-    return lambda receipt_data: classify_products_with_llm(model, receipt_data)
+    return lambda receipt_data: classify_products_with_llm(receipt_data, model)
 
 process_receipt = create_lazy_pipeline(
     lambda: create_vision_pipeline()
