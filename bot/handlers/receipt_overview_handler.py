@@ -17,7 +17,7 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
 
     receipt_data = context.user_data["current_receipt"]
 
-    button_text = f"Чек на дату: {receipt_data['receipt_date']}\n\nПродукты:\n"
+    text = f"Чек на дату: {receipt_data['receipt_date']}\n\nКатегории: {[product['category'] for product in receipt_data['products']]}\n"
 
     max_items = len(receipt_data["products"])
 
@@ -40,14 +40,14 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     else:
         page = 1
     logger.debug(f"page before handle_pagination {page}")
-    message = await handle_pagination(update, context, products_paginator, button_text, max_items=max_items, page=page)
+    message = await handle_pagination(update, context, products_paginator, text, max_items=max_items, page=page)
     context.user_data['receipt_message_id'] = message.message_id
     context.user_data["current_receipt"]["current_page"] = page
     logger.debug(f"{is_product_page_callback} - is product page callback")
     if is_product_page_callback:
         return
     else:
-        await send_message(update, context, text="Выберите опцию", reply_markup=confirm_cancel_kb())
+        await send_message(update, context, text="\nВыберите опцию", reply_markup=confirm_cancel_kb())
 
 async def select_receipt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return

@@ -4,6 +4,7 @@ import numpy as np
 import json
 import torch
 import torch.nn.functional as F
+from logger import logger
 
 class ProcessingResult:
     def __init__(self, success: bool, data: Any, error: str = ""):
@@ -43,15 +44,20 @@ def pickle_load(file_path):
 def postprocess_keras_preds(preds):
     labels = np.argmax(preds, axis = -1)
     categories = pickle_load("categories.pkl")
-
+    confidence = [round(pred[labels[i]] * 100, 2) for i, pred in enumerate(preds)]
     results = [categories[label] for label in labels]
+    for category, conf in zip(results, confidence):
+        logger.debug(f"{category:<65}||   {conf:^10.2f}")
     return json.dumps(results, ensure_ascii=False)
 
 def postprocess_bert_preds(preds):
     logits = preds.logits
     probabilities = F.softmax(torch.tensor(logits), dim=-1).numpy()
+    confidence = np.max(probabilities, axis=1)
     id2label = pickle_load("id2label.pkl")
     pred_labels = np.argmax(probabilities, axis=-1)
     pred_categories = [id2label[label] for label in pred_labels]
+    for category, conf in zip(pred_categories, confidence):
+        logger.debug(f"{category:<65}||   {conf:^10.2f}")
 
     return json.dumps(pred_categories, ensure_ascii=False)
