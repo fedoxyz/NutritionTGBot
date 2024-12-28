@@ -7,10 +7,36 @@ from langchain.schema import AIMessage
 import json
 import traceback
 from logger import logger
+import tensorflow as tf
+from transformers import BertForSequenceClassification
 
 T = TypeVar('T')  # Input type
 
-def create_inference_function(
+def create_keras_inference_function():
+    def process_with_model(input_data: list, model: tf.keras.Model) -> ProcessingResult:
+        try:
+            preds = model.predict(input_data)
+            return ProcessingResult(True, preds)
+            
+        except Exception as e:
+            error_msg = f"Error processing inference: {str(e)}\n{traceback.format_exc()}"
+            return ProcessingResult(False, None, error_msg)
+
+    return process_with_model
+
+def create_bert_inference_function():
+    def process_with_model(input_data: list, model: BertForSequenceClassification) -> ProcessingResult:
+        try:
+            preds = model(**input_data)
+            return ProcessingResult(True, preds)
+        except Exception as e:
+            error_msg = f"Error processing inference: {str(e)}\n{traceback.format_exc()}"
+            return ProcessingResult(False, None, error_msg)
+
+    return process_with_model
+            
+
+def create_ollama_inference_function(
     prompt_generator: Callable[[T], str],
     parser: JsonOutputParser,
     parse_multiple: bool = False
@@ -18,6 +44,7 @@ def create_inference_function(
     """Create an inference function with proper response handling."""
     
     def extract_content(response: Union[str, AIMessage]) -> str:
+
         """Extract content string from various response types."""
         if isinstance(response, AIMessage):
             return response.content
@@ -56,13 +83,17 @@ def create_inference_function(
     return process_with_model
 
 # Create specialized inference functions
-process_image_with_model = create_inference_function(
+process_image_with_model = create_ollama_inference_function(
     prompt_generator=create_vision_prompt,
     parser=JsonOutputParser(pydantic_object=Receipt)
 )
 
-classify_products_with_llm = create_inference_function(
+classify_products_with_llm = create_ollama_inference_function(
     prompt_generator=create_classification_prompt,
     parser=JsonOutputParser(pydantic_object=ClassifiedProduct),
     parse_multiple=True
 )
+
+classify_products_with_keras = create_keras_inference_function()
+
+classify_products_with_bert = create_bert_inference_function() 

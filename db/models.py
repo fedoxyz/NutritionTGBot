@@ -33,6 +33,7 @@ class Product(Base):
     name = Column(String(255), nullable=False)
     price = Column(BigInteger, nullable=True)
     quantity = Column(Float, nullable=True)
+    category = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now())
 
 

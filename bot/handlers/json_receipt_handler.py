@@ -38,7 +38,7 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
             'selected_product': None
         }
     
-    products = json.dumps(data["products"], ensure_ascii=False)
+    products = [product["name"] for product in data["products"]]
     await classify_test(products)
 
     await products_list_pag_callback(update, context)
@@ -48,10 +48,10 @@ async def classify_test(products):
 
     logger.debug(f"products - {products}")
 
-    """Process the photo and return the data."""
-    response = await grpc_client.classify_products(products)
 
-    logger.debug(f"{json.loads(response.data)}")
+    response = await grpc_client.classify_products(json.dumps(products, ensure_ascii=False))
+
+    logger.debug(f"{response.data}")
 
 
 

@@ -3,3 +3,6 @@
 .env
 *.tmp
 .aider*
+ai/models/*.keras
+ai/models/bert
+tmp/*

@@ -1,19 +1,20 @@
 import grpc
 from concurrent import futures
 import json
-from typing import Any, Callable
+from typing import Callable
 
 from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult
 from proto.service_pb2_grpc import PipelinesServicer, add_PipelinesServicer_to_server
-from pipelines import process_receipt, classify_receipt_products
+from pipelines import process_receipt, classify_ollama_receipt_products, classify_receipt_keras, classify_receipt_bert
 from logger import logger
+from utils import postprocess_keras_preds, postprocess_bert_preds
 
 def convert_result(result) -> ProcessingResult:
     """Convert internal result to ProcessingResult proto message."""
     try:
         # Convert data to string if it's not already
         data_str = (
-            json.dumps(result.data) 
+            json.dumps(result.data, ensure_ascii=False) 
             if not isinstance(result.data, str) 
             else result.data
         )
@@ -47,7 +48,13 @@ def process_receipt_handler(request: ReceiptRequest, context) -> ProcessingResul
 def classify_products_handler(request: ClassifyRequest, context) -> ProcessingResult:
     """Handle product classification requests."""
     try:
-        result = classify_receipt_products(request.products_json)
+        logger.debug("Starting products classification")
+        logger.debug(f"request - {request}")
+        products = json.loads(request.products_json)
+        result = classify_receipt_bert(products)
+        logger.debug(result)
+        result.data = postprocess_bert_preds(result.data)
+        logger.debug(result.data)
         return convert_result(result)
     except Exception as e:
         logger.error(f"Error classifying products: {str(e)}")

@@ -92,3 +92,8 @@ async def fetch_product_by_id(product_id: int) -> Product:
         logger.debug(f"Fetched product: {product}")
         return product
 
+#async def set_category(product_id, category):
+#    """Assign category to product"""
+#    async with db.session() as session:
+#        query = select(Product).where(Product.id == product_id) = category
+
