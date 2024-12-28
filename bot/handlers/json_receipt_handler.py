@@ -7,6 +7,7 @@ from .receipt_overview_handler import products_list_pag_callback
 from utils.message_utils import delete_message_by_id
 from grpc_client import GRPCClient
 import json
+import re
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -29,29 +30,50 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not data or 'products' not in data or not data['products']:
         await update.message.reply_text("Не удалось распознать чек или продукты отсутствуют.")
         return
-    
-    context.user_data['current_receipt'] = {
-            'products': data["products"],
-            'receipt_date': data["receipt_date"],
-            'current_page': 1,
-            'editing_mode': False,
-            'selected_product': None
-        }
-    
-    products = [product["name"] for product in data["products"]]
-    await classify_test(products)
 
-    await products_list_pag_callback(update, context)
+    clean_string = lambda x: re.sub(r'[^а-яА-ЯёЁa-zA-Z\s]', ' ', x).lower().strip()
+    no_spaces = lambda x: re.sub(r'\s+', ' ', x)
+   
+    product_names = [
+    no_spaces(clean_string(product["name"]))
+    for product in data["products"]
+    ]
 
-async def classify_test(products):
+    categories = await classify_test(product_names)
+
+    if categories:
+        classified_products = [
+        {**product, "category": category}
+        for product, category in zip(data["products"], categories)
+        ]
+
+        logger.debug(f"classfied products - {classified_products}")
+
+        context.user_data['current_receipt'] = {
+                'products': classified_products,
+                'receipt_date': data["receipt_date"],
+                'current_page': 1,
+                'editing_mode': False,
+                'selected_product': None
+            }
+
+        await products_list_pag_callback(update, context)
+    else:
+        await update.message.reply_text("При классификации продуктов произошла ошибка. Повторите позже.")
+
+
+async def classify_test(product_names):
     grpc_client = GRPCClient()
 
-    logger.debug(f"products - {products}")
+    logger.debug(f"product names - {product_names}")
 
-
-    response = await grpc_client.classify_products(json.dumps(products, ensure_ascii=False))
+    response = await grpc_client.classify_products(json.dumps(product_names, ensure_ascii=False))
 
     logger.debug(f"{response.data}")
+    if response.success:
+        return json.loads(response.data)
+    else:
+        return False
 
 
 

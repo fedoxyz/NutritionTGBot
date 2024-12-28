@@ -32,8 +32,9 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
         context.user_data['current_receipt']['selected_product'] = selected_product
 
         # Text for product details
-        text = f"Название продукта: {selected_product['name']}\n"
-        text += f"Количество: {selected_product['quantity']}"
+        text = f"Название продукта: {selected_product['name']}\n\n"
+        text += f"Количество: {selected_product['quantity']}\n\n"
+        text += f"Категория: {selected_product['category']}"
         
         await delete_message_by_id(update, context, 'product_message_id')
 

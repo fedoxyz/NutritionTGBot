@@ -51,9 +51,9 @@ def classify_products_handler(request: ClassifyRequest, context) -> ProcessingRe
         logger.debug("Starting products classification")
         logger.debug(f"request - {request}")
         products = json.loads(request.products_json)
-        result = classify_receipt_bert(products)
+        result = classify_receipt_keras(products)
         logger.debug(result)
-        result.data = postprocess_bert_preds(result.data)
+        result.data = postprocess_keras_preds(result.data)
         logger.debug(result.data)
         return convert_result(result)
     except Exception as e:
