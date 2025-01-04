@@ -1,3 +1,4 @@
+from bot.keyboards.data_source_kb import data_source_kb
 from keyboards.main_kb import main_kb
 from keyboards.receipt_kb import confirm_cancel_kb, products_paginator 
 from logger import logger
@@ -8,6 +9,7 @@ from typing import Dict, Callable, Awaitable
 from utils.message_utils import delete_message_by_id, send_message, edit_message, delete_message_by_id
 from utils.chat_filters import private_chat_only
 from db.functions.receipts import new_receipt
+from db.functions.products import fetch_user_products
 from keyboards.paginator_kb import handle_pagination
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
@@ -15,11 +17,33 @@ OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     is_product_page_callback = False
 
-    receipt_data = context.user_data["current_receipt"]
+    if context.user_data.get("current_receipt") is None: 
+        products = await fetch_user_products(update.effective_user.id, limit=300)
+        receipt_data = {}
+        context.user_data["current_receipt"] = {}
+        logger.debug(f"{products[0]} - first product")
+        receipt_data["products"] = [
+            {
+                "id": product.id,
+                "name": product.name,
+                "quantity": product.quantity,
+                "category": product.category,
+                "from_db": True
+            }
+            for product in products
+        ]
+        context.user_data["current_receipt"]["products"] = receipt_data["products"]
+        context.user_data["current_receipt"]["new_receipt"] = False
 
-    text = f"Чек на дату: {receipt_data['receipt_date']}\n\nКатегории: {[product['category'] for product in receipt_data['products']]}\n"
+    if (context.user_data["current_receipt"] is not None and context.user_data.get("current_receipt", {}).get("new_receipt") != True):
+        text = "Все продукты: "
+        reply_markup = data_source_kb()
+    else:
+        receipt_data = context.user_data["current_receipt"]
+        text = f"Чек на дату: {receipt_data['receipt_date']}\n\nКатегории: {[product['category'] for product in receipt_data['products']]}\n"
+        reply_markup = confirm_cancel_kb()
 
-    max_items = len(receipt_data["products"])
+    max_items = len(context.user_data["current_receipt"]["products"])
 
     logger.debug(f"{max_items} - max items")
     if max_items < 1:
@@ -47,7 +71,7 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     if is_product_page_callback:
         return
     else:
-        await send_message(update, context, text="\nВыберите опцию", reply_markup=confirm_cancel_kb())
+        await send_message(update, context, text="\nВыберите опцию", reply_markup=reply_markup)
 
 async def select_receipt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return
@@ -69,7 +93,8 @@ async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека. Попробуйте снова."
     else:
         text = "Нет данных для добавления."
-
+    
+    context.user_data["current_receipt"] = None
     await delete_message_by_id(update, context, "receipt_message_id")
 
     await send_message(update, context, text=text, reply_markup=main_kb())

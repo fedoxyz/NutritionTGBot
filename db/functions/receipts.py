@@ -31,16 +31,16 @@ async def new_receipt(user_id: int, receipt_data: Dict) -> Optional[Receipt]:
             return None
 
         # Associate new products with the receipt
-        products = receipt_data.get("products", [])
+        products = receipt_data["products"]
         logger.debug(f"{products} - products")
         for product_data in products:
-            product_name = product_data.get("name")
-            price = product_data.get("price")
-            quantity = product_data.get("quantity")
-            logger.debug(f"{quantity} - quantity")
+            logger.debug(f"{product_data} - product_data")
 
-            # Create a new product directly without checking for existence
-            new_product = Product(name=product_name, price=price, quantity=quantity)
+            new_product = Product(name=product_data["name"], 
+                                  price=product_data["price"], 
+                                  quantity=product_data["quantity"], 
+                                  category=product_data['category'])
+
             session.add(new_product)
             logger.debug(f"Adding new product: {new_product.name}")
 

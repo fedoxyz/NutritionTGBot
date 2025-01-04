@@ -77,10 +77,29 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> A
         
     return ConversationHandler.END 
 
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle any errors by resetting state and calling /start"""
+    logger.error(f"Error occurred: {context.error}")
+    
+    try:
+        if update and update.effective_chat:
+            # Reset user data
+            if context.user_data:
+                context.user_data.clear()
+            
+            # Trigger /start command
+            await update.effective_message.reply_text(
+                "Произошла ошибка. Начинаем сначала..."
+            )
+            await start_handler(update, context)
+    except Exception as e:
+        logger.error(f"Error in error handler: {e}")
+
 def setup_start_handler(application):
     application.add_handler(CommandHandler("start", start_handler))
     application.add_handler(MessageHandler(
         filters.Regex("^(Главное меню)$"),
         start_handler
     ))
+    application.add_error_handler(error_handler)
     logger.debug("Start handlers added");

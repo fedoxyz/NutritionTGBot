@@ -92,7 +92,7 @@ async def handle_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     logger.debug(f"{page}")
     page = query.data.split('#')[1] if query and query.data and page == None else page if query and query.data and page != None else 1
     logger.debug(f"{page} - page inside handle_pagination")
-    paginator, current_page = await paginator_func(update, context, user_id, int(page), **kwargs)
+    paginator, current_page = await paginator_func(update, context, int(page), **kwargs)
     text = f"{list_text}\nСтраница {current_page}"
     
     if query:

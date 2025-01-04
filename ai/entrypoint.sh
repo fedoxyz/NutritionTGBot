@@ -25,7 +25,7 @@ echo $(pwd)
 # Check if BERT folder has contents
 if [ ! "$(ls -A "$extract_path" 2>/dev/null)" ]; then
   echo "🔴 BERT folder is empty or does not exist. Downloading archive..."
-  curl -L -o "$filepath" "https://drive.usercontent.google.com/download?id=1ZFQm356ga0umWPU_H8AOJCCBLOod4Uj3&export=download&confirm=t&uuid=258a8606-2666-4b54-95b0-77c4ffade3f3&at=APvzH3pPCqBVOVsCaPdvxCXYQA2_:1735351431985"
+  curl -L -o "$filepath" "https://drive.usercontent.google.com/download?id=12q50AYYD1AJNzNEt02a1VNrdRdDSmDmy&export=download&confirm=t&uuid=258a8606-2666-4b54-95b0-77c4ffade3f3&at=APvzH3pPCqBVOVsCaPdvxCXYQA2_:1735351431985"
   echo "🔴 Unzipping BERT model archive..."
   mkdir -p "$extract_path"
   unzip -o "$filepath" -d "$extract_path"

@@ -38,7 +38,7 @@ class Product(Base):
 
 
     def __repr__(self):
-        return f"<Product(id={self.id}, name={self.name}, price={self.price})>"
+        return f"<Product(id={self.id}, name={self.name}, price={self.price}, category={self.category}, quantity={self.quantity})>"
 
 class Receipt(Base):
     __tablename__ = 'receipts'

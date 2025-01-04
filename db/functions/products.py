@@ -1,10 +1,11 @@
 from typing import List, Literal
 from db import db, Product, check_product_association, Receipt
 from sqlalchemy.future import select
-from sqlalchemy import desc
+from sqlalchemy import desc, delete
 from logger import logger
 from datetime import datetime
 from sqlalchemy import and_
+from sqlalchemy.exc import SQLAlchemyError
 
 MAX_PAGE_SIZE = 6
 
@@ -92,8 +93,24 @@ async def fetch_product_by_id(product_id: int) -> Product:
         logger.debug(f"Fetched product: {product}")
         return product
 
-#async def set_category(product_id, category):
-#    """Assign category to product"""
-#    async with db.session() as session:
-#        query = select(Product).where(Product.id == product_id) = category
 
+async def remove_product(product_id: int) -> bool:
+    """Remove a product and its associations from the database."""
+    try:
+        async with db.session() as session:
+            async with session.begin():
+                # First remove associations
+                delete_assoc = check_product_association.delete().where(
+                    check_product_association.c.product_id == product_id
+                )
+                await session.execute(delete_assoc)
+                
+                # Then remove the product
+                delete_prod = delete(Product).where(Product.id == product_id)
+                await session.execute(delete_prod)
+                
+                return True
+                
+    except SQLAlchemyError as e:
+        logger.error(f"Error removing product {product_id}: {str(e)}")
+        return False

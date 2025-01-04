@@ -54,7 +54,8 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
                 'receipt_date': data["receipt_date"],
                 'current_page': 1,
                 'editing_mode': False,
-                'selected_product': None
+                'selected_product': None,
+                'new_receipt': True
             }
 
         await products_list_pag_callback(update, context)

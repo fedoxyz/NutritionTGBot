@@ -1,8 +1,9 @@
-from db.functions.products import fetch_user_products
+from bot.keyboards.data_source_kb import data_source_kb
+from db.functions.products import remove_product
 from keyboards.main_kb import main_kb
 from logger import logger
 import re
-from telegram import Update
+from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
 from utils.message_utils import send_message, edit_message, delete_message_by_id
@@ -80,7 +81,6 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await products_list_pag_callback(update, context)
 
 menu_options: Dict[str, OptionHandler] = {
-        "💾 Сохранить": confirm_add,
         "🔙 Назад": back
         }
 
@@ -95,23 +95,34 @@ async def edit_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.callback_query.answer()
     await update.callback_query.edit_message_text("Введите новое количество продукта:")
 
-async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Handle product removal
+async def handle_product_removal(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle product removal from the current receipt."""
     await update.callback_query.answer()
     
-    # Get the product ID and remove it from the list
+    # Get the product ID from callback data
     product_id = int(update.callback_query.data.split('#')[1])
+    
+    # Find product and remove from database if it was from db
+    product = next(
+        (p for p in context.user_data["current_receipt"]["products"] 
+         if p["id"] == product_id and p.get("from_db") is True),
+        None
+    )
+    if product:
+        await remove_product(product["id"])
+    
+    # Remove product from the current receipt list
     context.user_data['current_receipt']['products'] = [
-        p for p in context.user_data['current_receipt']['products'] if p["id"] != product_id
+        p for p in context.user_data['current_receipt']['products'] 
+        if p["id"] != product_id
     ]
     
-    # Update user data to clear the selected product
+    # Clear the selected product
     context.user_data["current_receipt"]["selected_product"] = None
-
     
     await update.callback_query.edit_message_text("Продукт удален из списка.")
     
-    # Call `products_list_pag_callback` to update the product list
+    # Update the product list display
     await products_list_pag_callback(update, context)
 
 
@@ -135,7 +146,7 @@ def setup_product_overview_handlers(application):
     application.add_handler(CallbackQueryHandler(product_overview_callback, pattern=r"^product#\d+$"))
     application.add_handler(CallbackQueryHandler(edit_name, pattern=r"^edit_name#\d+$"))
     application.add_handler(CallbackQueryHandler(edit_quantity, pattern=r"^edit_quantity#\d+$"))
-    application.add_handler(CallbackQueryHandler(remove_product, pattern=r"^remove_product#\d+$"))
+    application.add_handler(CallbackQueryHandler(handle_product_removal, pattern=r"^remove_product#\d+$"))
 
     logger.debug("Добавлены product overview handlers")
 

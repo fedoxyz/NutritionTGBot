@@ -52,10 +52,10 @@ def postprocess_keras_preds(preds):
 
 def postprocess_bert_preds(preds):
     logits = preds.logits
-    probabilities = F.softmax(torch.tensor(logits), dim=-1).numpy()
+    probabilities = F.softmax(torch.tensor(logits), dim=1).numpy()
     confidence = np.max(probabilities, axis=1)
     id2label = pickle_load("id2label.pkl")
-    pred_labels = np.argmax(probabilities, axis=-1)
+    pred_labels = np.argmax(probabilities, axis=1)
     pred_categories = [id2label[label] for label in pred_labels]
     for category, conf in zip(pred_categories, confidence):
         logger.debug(f"{category:<65}||   {conf:^10.2f}")

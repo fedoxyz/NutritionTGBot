@@ -49,6 +49,6 @@ async def products_paginator(update, context, user_id: int, page: int) -> Union[
             f"- (кол-во: {p.quantity})"
         ),
         data_func=lambda p: f"product#{p.id}",
-        data_pattern='products_page#{page}',
+        data_pattern='product_page#{page}',
         max_items=max_items
     )
