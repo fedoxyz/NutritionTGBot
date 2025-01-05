@@ -36,9 +36,6 @@ services:
       - ./tmp:/tmp  # Shared volume for readiness check
     ports:
       - "50051:50051"
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
     deploy:
       resources:
         reservations:

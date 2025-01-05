@@ -1,4 +1,3 @@
-from bot.keyboards.data_source_kb import data_source_kb
 from db.functions.products import remove_product
 from keyboards.main_kb import main_kb
 from logger import logger
@@ -16,7 +15,6 @@ from .receipt_overview_handler import products_list_pag_callback
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def product_overview_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
     query = update.callback_query
     await query.answer()
 

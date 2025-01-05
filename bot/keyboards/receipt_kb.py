@@ -14,7 +14,7 @@ def confirm_cancel_kb():
         one_time_keyboard=True,
     )
 
-async def products_paginator(update, context, page: int, **kwargs) -> Union[InlineKeyboardPaginator, bool]:
+async def products_paginator(update, context, user_id, page: int, **kwargs) -> Union[InlineKeyboardPaginator, bool]:
     """Generate a paginated view for the products."""
     products = context.user_data["current_receipt"]["products"]
     return await generic_paginator(

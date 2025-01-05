@@ -10,31 +10,31 @@ from keyboards.chem_ratio_kb import nutrition_kb
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def chem_ratio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Выберите из списка: "
+    text = "Пожалуйста, выберите раздел на клавиатуре"
     await send_message(update, context, text, reply_markup=nutrition_kb()) 
 
 async def vitaminas(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу с витаминами"
+    text = "Здесь будет таблица с потребляемыми витаминами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 async def minerals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу с минералами"
+    text = "Здесь будет таблица с потребляемыми минералами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 async def amino_acid(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу с аминокислотами"
+    text = "Здесь будет таблица с потребляемыми аминокислотами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 async def fats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу c составами жиров"
+    text = "Здесь будет таблица с потребляемыми жирами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 async def hydrocarbons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу с углеводородами"
+    text = "Здесь будет таблица с потребляемыми углеводами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 async def psyched_substances(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = "Показать таблицу с психоактивными веществами"
+    text = "Здесь будет таблица с потребляемыми психоактивными веществами"
     await send_message(update, context, text, reply_markup=nutrition_kb())
 
 menu_options: Dict[str, OptionHandler] = {

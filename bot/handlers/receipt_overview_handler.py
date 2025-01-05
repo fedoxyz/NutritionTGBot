@@ -1,4 +1,3 @@
-from bot.keyboards.data_source_kb import data_source_kb
 from keyboards.main_kb import main_kb
 from keyboards.receipt_kb import confirm_cancel_kb, products_paginator 
 from logger import logger
@@ -37,10 +36,12 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
 
     if (context.user_data["current_receipt"] is not None and context.user_data.get("current_receipt", {}).get("new_receipt") != True):
         text = "Все продукты: "
-        reply_markup = data_source_kb()
+        reply_markup = None
     else:
         receipt_data = context.user_data["current_receipt"]
-        text = f"Чек на дату: {receipt_data['receipt_date']}\n\nКатегории: {[product['category'] for product in receipt_data['products']]}\n"
+        text = f"Чек на дату: {receipt_data['receipt_date']}\n\nНайдены категории продуктов: \n"
+        for product in receipt_data["products"]:
+            text += f" - {product['category']}\n"
         reply_markup = confirm_cancel_kb()
 
     max_items = len(context.user_data["current_receipt"]["products"])

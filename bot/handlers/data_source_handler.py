@@ -4,9 +4,9 @@ import re
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
-from utils.message_utils import send_message
+from utils.message_utils import delete_message_by_id, send_message
 from utils.chat_filters import private_chat_only
-from keyboards.data_source_kb import receipts_paginator, data_source_kb, products_paginator
+from keyboards.data_source_kb import receipts_paginator, data_source_kb
 from keyboards.paginator_kb import handle_pagination, handle_list_display
 
 
@@ -15,15 +15,6 @@ OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 async def receipts_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await handle_pagination(update, context, receipts_paginator, "Список чеков:")
 
-#async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#    context.user_data['current_receipt'] = {
-#            'products': data["products"],
-#            'receipt_date': data["receipt_date"],
-#            'current_page': 1,
-#            'editing_mode': False,
-#            'selected_product': None
-#        }
-#    await handle_pagination(update, context, products_paginator, "Список купленных продуктов:")
 
 async def data_source(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = "Выберите опцию: "
@@ -53,11 +44,15 @@ async def unrecognized_p_list(update: Update, context: ContextTypes.DEFAULT_TYPE
     text = "Здесь будет список нераспознанных продуктов"
     await send_message(update, context, text, reply_markup=data_source_kb())
 
+async def purchased_p_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await delete_message_by_id(update, context, "receipt_message_id")
+    await products_list_pag_callback(update, context) 
+
 menu_options: Dict[str, OptionHandler] = {
     "Источники данных": data_source,
     "Как добавлять чеки": how_to_receipts,
     "Список чеков": receipts_list,
-    "Список купленных продуктов": products_list_pag_callback,
+    "Список купленных продуктов": purchased_p_list,
     "Список нераспознанных продуктов": unrecognized_p_list,
 }
 
@@ -79,7 +74,6 @@ def setup_data_source_handlers(application):
     filter = filters.Regex('^(' + '|'.join(map(re.escape, menu_options.keys())) + ')$')
     application.add_handler(MessageHandler(filter & ~filters.COMMAND, handler))
     application.add_handler(CallbackQueryHandler(receipts_list_pag_callback, pattern=r"^receipts_page#\d+$"))
-    #application.add_handler(CallbackQueryHandler(products_list_pag_callback, pattern=r"^products_page#\d+$"))
 
     logger.debug("Добавлены menu handlers")
 
