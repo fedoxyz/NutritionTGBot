@@ -47,25 +47,6 @@ async def product_overview_callback(update: Update, context: ContextTypes.DEFAUL
     else:
         await query.edit_message_text("Продукт не найден.")
 
-async def confirm_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
-    receipt_data = context.user_data.get("current_receipt")
-
-    if receipt_data:
-        # Check if this is a new receipt or an existing one by checking for an 'id' field
-        if "id" in receipt_data:
-            # Existing receipt, so update it
-            success = await update_receipt(user_id, receipt_data)
-            text = "Чек успешно изменен." if success else "Ошибка при обновлении чека. Попробуйте снова."
-        else:
-            # New receipt, so add it
-            success = await new_receipt(user_id, receipt_data)
-            text = "Чек успешно добавлен." if success else "Ошибка при добавлении чека. Попробуйте снова."
-    else:
-        text = "Нет данных для добавления."
-
-    await delete_message_by_id(update, context, "receipt_message_id")
-    await send_message(update, context, text=text, reply_markup=reply_markup)
 
 async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['current_receipt'].pop('selected_product', None)

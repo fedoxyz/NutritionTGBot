@@ -1,3 +1,4 @@
+from keyboards.data_source_kb import data_source_kb
 from keyboards.main_kb import main_kb
 from keyboards.receipt_kb import confirm_cancel_kb, products_paginator 
 from logger import logger
@@ -15,6 +16,7 @@ OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     is_product_page_callback = False
+    is_new_receipt = False
 
     if context.user_data.get("current_receipt") is None: 
         products = await fetch_user_products(update.effective_user.id, limit=300)
@@ -36,8 +38,9 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
 
     if (context.user_data["current_receipt"] is not None and context.user_data.get("current_receipt", {}).get("new_receipt") != True):
         text = "Все продукты: "
-        reply_markup = None
+        reply_markup = data_source_kb()
     else:
+        is_new_receipt = True
         receipt_data = context.user_data["current_receipt"]
         text = f"Чек на дату: {receipt_data['receipt_date']}\n\nНайдены категории продуктов: \n"
         for product in receipt_data["products"]:
@@ -71,8 +74,10 @@ async def products_list_pag_callback(update: Update, context: ContextTypes.DEFAU
     logger.debug(f"{is_product_page_callback} - is product page callback")
     if is_product_page_callback:
         return
-    else:
+    elif is_new_receipt:
         await send_message(update, context, text="\nВыберите опцию", reply_markup=reply_markup)
+    else:
+        await send_message(update, context, text="\nК списку продуктов", reply_markup=reply_markup)
 
 async def select_receipt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return
