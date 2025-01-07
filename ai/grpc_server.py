@@ -3,11 +3,11 @@ from concurrent import futures
 import json
 from typing import Callable
 
-from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult
+from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult, Top5Request
 from proto.service_pb2_grpc import PipelinesServicer, add_PipelinesServicer_to_server
 from pipelines import process_receipt, classify_ollama_receipt_products, classify_receipt_keras, classify_receipt_bert
 from logger import logger
-from utils import postprocess_keras_preds, postprocess_bert_preds
+from utils import postprocess_keras_preds, postprocess_bert_preds, postprocess_top_5_bert
 
 def convert_result(result) -> ProcessingResult:
     """Convert internal result to ProcessingResult proto message."""
@@ -51,6 +51,7 @@ def classify_products_handler(request: ClassifyRequest, context) -> ProcessingRe
         logger.debug("Starting products classification")
         logger.debug(f"request - {request}")
         products = json.loads(request.products_json)
+        logger.debug(f"products - {products}")
         result = classify_receipt_bert(products)
         logger.debug(result)
         result.data = postprocess_bert_preds(result.data)
@@ -64,9 +65,31 @@ def classify_products_handler(request: ClassifyRequest, context) -> ProcessingRe
             error=f"Error classifying products: {str(e)}"
         )
 
+
+def top_5_products_handler(request: Top5Request, context) -> ProcessingResult:
+    """Handle product classification requests."""
+    try:
+        logger.debug("Starting product classification for top 5")
+        logger.debug(f"request - {request}")
+        products = json.loads(request.product_json)
+        logger.debug(f"products = {products}")
+        result = classify_receipt_bert(products)
+        logger.debug(result)
+        result.data = postprocess_top_5_bert(result.data)
+        logger.debug(result.data)
+        return convert_result(result)
+    except Exception as e:
+        logger.error(f"Error classifying top 5 product: {str(e)}")
+        return ProcessingResult(
+            success=False,
+            data="",
+            error=f"Error classifying top 5 products: {str(e)}"
+        )
+
 def create_servicer(
     process_receipt_fn: Callable = process_receipt_handler,
-    classify_products_fn: Callable = classify_products_handler
+    classify_products_fn: Callable = classify_products_handler,
+    top_5_products_fn: Callable = top_5_products_handler,
 ) -> PipelinesServicer:
     """Create a PipelinesServicer with the specified handler functions."""
     
@@ -76,6 +99,9 @@ def create_servicer(
             
         def ClassifyProducts(self, request, context):
             return classify_products_fn(request, context)
+
+        def Top5Products(self, request, context):
+            return top_5_products_fn(request, context)
     
     return FunctionalPipelinesServicer()
 

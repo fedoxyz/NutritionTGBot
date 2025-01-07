@@ -24,6 +24,8 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     await delete_message_by_id(update, context, 'receipt_message_id')
+    await delete_message_by_id(update, context, 'product_message_id')
+
 
     photo = update.message.photo[-1]
     photo_file = await photo.get_file()
@@ -50,15 +52,15 @@ async def handle_photo_receipt(update: Update, context: ContextTypes.DEFAULT_TYP
         'receipt_date': receipt_date,
         'current_page': 1,
         'editing_mode': False,
-        'selected_product': None
+        'selected_product': None,
+        'new_receipt': True
+
     }
-    set_current_state(context, "PHOTO_PROCESSED")
 
     await products_list_pag_callback(update, context)
     return
 
 async def process_photo(photo_bytes, update, context):
-    """Process the photo and return the data."""
     grpc_client = GRPCClient()
     # Try processing with QR code first
     data = qr_process_receipt(photo_bytes)

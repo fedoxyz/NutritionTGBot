@@ -3,6 +3,7 @@ syntax = "proto3";
 service Pipelines {
   rpc ProcessReceipt (ReceiptRequest) returns (ProcessingResult);
   rpc ClassifyProducts (ClassifyRequest) returns (ProcessingResult);
+  rpc Top5Products (Top5Request) returns (ProcessingResult);
 }
 
 message ReceiptRequest {
@@ -11,6 +12,10 @@ message ReceiptRequest {
 
 message ClassifyRequest {
   string products_json = 1; 
+}
+
+message Top5Request {
+  string product_json = 1; 
 }
 
 message ProcessingResult {

@@ -1,16 +1,17 @@
-from db.functions.products import remove_product
-from keyboards.main_kb import main_kb
+from db.functions.products import remove_product, update_product_category
+from keyboards.product_overview_kb import categories_kb
 from logger import logger
 import re
-from telegram import Update, ReplyKeyboardRemove
+from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from typing import Dict, Callable, Awaitable
-from utils.message_utils import send_message, edit_message, delete_message_by_id
+from utils.message_utils import send_message, delete_message_by_id
 from utils.chat_filters import private_chat_only
-from db.functions.receipts import new_receipt
-from keyboards.paginator_kb import handle_pagination
 from keyboards.product_overview_kb import product_overview_kb, confirm_cancel_kb
 from .receipt_overview_handler import products_list_pag_callback
+import json
+from grpc_client import GRPCClient
+import urllib.parse
 
 OptionHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
@@ -63,16 +64,83 @@ menu_options: Dict[str, OptionHandler] = {
         "🔙 Назад": back
         }
 
-# Handlers for each action
-async def edit_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Handle name editing
-    await update.callback_query.answer()
-    await update.callback_query.edit_message_text("Введите новое название продукта:")
 
-async def edit_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Handle quantity editing
+
+async def handle_category_edit(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Get the product ID from callback data
+    product_id = int(update.callback_query.data.split('#')[1])
+    logger.debug(f"{product_id} is product_id")
+    
+    # Store product_id in user_data for the category selection handler
+    context.user_data["editing_product_id"] = product_id
+    
+    # Find product and remove from database if it was from db
+    product = next(
+        (p for p in context.user_data["current_receipt"]["products"] 
+         if p["id"] == product_id),
+        None
+    )
+    logger.debug(f"product is {product}")
+    
+    if product:
+        product_names = [product["name"]]
+        grpc_client = GRPCClient()
+        response = await grpc_client.top_5_products(json.dumps(product_names, ensure_ascii=False))
+        categories = json.loads(response.data)
+        reply_markup = categories_kb(categories)
+        context.user_data["available_categories"] = categories
+        await update.callback_query.edit_message_text(
+            text="Пожалуйста, выберите категорию",
+            reply_markup=reply_markup
+        )
+
+async def handle_category_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.callback_query.answer()
-    await update.callback_query.edit_message_text("Введите новое количество продукта:")
+    
+    # Get category index from callback data
+    category_idx = int(update.callback_query.data.split('#')[1])
+    # Get the actual category from stored list
+    selected_category = context.user_data["available_categories"][category_idx]
+    product_id = context.user_data.get("editing_product_id")
+
+    if product_id is not None:
+        # Find product in current receipt
+        product = next(
+            (p for p in context.user_data["current_receipt"]["products"] 
+             if p["id"] == product_id),
+            None
+        )
+        
+        if product:
+            # Update category in memory
+            product["category"] = selected_category
+            
+            # If product is from database, update it there as well
+            if product.get("from_db") is True:
+                success = await update_product_category(product_id, selected_category)
+                if not success:
+                    logger.error(f"Failed to update category in database for product {product_id}")
+            
+                        # Clean up temporary data
+            del context.user_data["editing_product_id"]
+            del context.user_data["available_categories"]
+            
+            # Send confirmation message
+            await update.callback_query.edit_message_text(
+                text=f"Категория изменена на: {selected_category}"
+            )
+            
+            # Update the product list display
+            await products_list_pag_callback(update, context)
+        else:
+            await update.callback_query.edit_message_text(
+                text="Продукт не найден"
+            )
+    else:
+        await update.callback_query.edit_message_text(
+            text="Произошла ошибка при изменении категории"
+        )
+
 
 async def handle_product_removal(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle product removal from the current receipt."""
@@ -95,7 +163,8 @@ async def handle_product_removal(update: Update, context: ContextTypes.DEFAULT_T
         p for p in context.user_data['current_receipt']['products'] 
         if p["id"] != product_id
     ]
-    
+    await product_overview_callback(update, context)
+
     # Clear the selected product
     context.user_data["current_receipt"]["selected_product"] = None
     
@@ -123,9 +192,12 @@ def setup_product_overview_handlers(application):
     receipt_process_filter = filters.Regex('^(' + '|'.join(map(re.escape, menu_options.keys())) + ')$')
     application.add_handler(MessageHandler(receipt_process_filter & ~filters.COMMAND, handler))
     application.add_handler(CallbackQueryHandler(product_overview_callback, pattern=r"^product#\d+$"))
-    application.add_handler(CallbackQueryHandler(edit_name, pattern=r"^edit_name#\d+$"))
-    application.add_handler(CallbackQueryHandler(edit_quantity, pattern=r"^edit_quantity#\d+$"))
     application.add_handler(CallbackQueryHandler(handle_product_removal, pattern=r"^remove_product#\d+$"))
+    application.add_handler(CallbackQueryHandler(handle_category_edit, pattern=r"^edit_category#\d+$"))
+    application.add_handler(CallbackQueryHandler(
+    handle_category_selection, 
+    pattern="^set_category#"
+    ))
 
     logger.debug("Добавлены product overview handlers")
 

@@ -1,5 +1,5 @@
 import grpc.aio
-from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult
+from proto.service_pb2 import ReceiptRequest, ClassifyRequest, ProcessingResult, Top5Request
 from proto.service_pb2_grpc import PipelinesStub
 from config import GRPC_SERVER
 from logger import logger
@@ -33,4 +33,9 @@ class GRPCClient:
     async def classify_products(self, products_json):
         request = ClassifyRequest(products_json=products_json)
         response = await self.stub.ClassifyProducts(request)
+        return response
+
+    async def top_5_products(self, product_json):
+        request = Top5Request(product_json=product_json)
+        response = await self.stub.Top5Products(request)
         return response

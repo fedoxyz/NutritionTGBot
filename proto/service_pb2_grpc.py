@@ -44,6 +44,11 @@ class PipelinesStub(object):
                 request_serializer=proto_dot_service__pb2.ClassifyRequest.SerializeToString,
                 response_deserializer=proto_dot_service__pb2.ProcessingResult.FromString,
                 _registered_method=True)
+        self.Top5Products = channel.unary_unary(
+                '/Pipelines/Top5Products',
+                request_serializer=proto_dot_service__pb2.Top5Request.SerializeToString,
+                response_deserializer=proto_dot_service__pb2.ProcessingResult.FromString,
+                _registered_method=True)
 
 
 class PipelinesServicer(object):
@@ -61,6 +66,12 @@ class PipelinesServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Top5Products(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_PipelinesServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -72,6 +83,11 @@ def add_PipelinesServicer_to_server(servicer, server):
             'ClassifyProducts': grpc.unary_unary_rpc_method_handler(
                     servicer.ClassifyProducts,
                     request_deserializer=proto_dot_service__pb2.ClassifyRequest.FromString,
+                    response_serializer=proto_dot_service__pb2.ProcessingResult.SerializeToString,
+            ),
+            'Top5Products': grpc.unary_unary_rpc_method_handler(
+                    servicer.Top5Products,
+                    request_deserializer=proto_dot_service__pb2.Top5Request.FromString,
                     response_serializer=proto_dot_service__pb2.ProcessingResult.SerializeToString,
             ),
     }
@@ -128,6 +144,33 @@ class Pipelines(object):
             target,
             '/Pipelines/ClassifyProducts',
             proto_dot_service__pb2.ClassifyRequest.SerializeToString,
+            proto_dot_service__pb2.ProcessingResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Top5Products(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Pipelines/Top5Products',
+            proto_dot_service__pb2.Top5Request.SerializeToString,
             proto_dot_service__pb2.ProcessingResult.FromString,
             options,
             channel_credentials,

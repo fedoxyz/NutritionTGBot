@@ -19,6 +19,8 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     
     await delete_message_by_id(update, context, 'receipt_message_id')
+    await delete_message_by_id(update, context, 'product_message_id')
+
 
     # Download the file as a bytearray
     file = await update.message.document.get_file()
@@ -39,7 +41,10 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
     for product in data["products"]
     ]
 
-    categories = await classify_test(product_names)
+    # Without preprocessing
+    #product_names = [product["name"] for product in data["products"]]
+
+    categories = await classify_products(product_names)
 
     if categories:
         classified_products = [
@@ -63,7 +68,7 @@ async def handle_json_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("При классификации продуктов произошла ошибка. Повторите позже.")
 
 
-async def classify_test(product_names):
+async def classify_products(product_names):
     grpc_client = GRPCClient()
 
     logger.debug(f"product names - {product_names}")

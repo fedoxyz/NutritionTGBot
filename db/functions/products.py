@@ -114,3 +114,22 @@ async def remove_product(product_id: int) -> bool:
     except SQLAlchemyError as e:
         logger.error(f"Error removing product {product_id}: {str(e)}")
         return False
+
+async def update_product_category(product_id: int, category: str) -> bool:
+    try:
+        async with db.session() as session:
+            logger.debug(f"Updating category to '{category}' for product {product_id}")
+            product = await fetch_product_by_id(product_id)
+            
+            if product:
+                product.category = category
+                await session.commit()
+                logger.debug(f"Successfully updated category for product {product_id}")
+                return True
+            
+            logger.warning(f"Product {product_id} not found in database")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error updating category for product {product_id}: {str(e)}")
+        return False
