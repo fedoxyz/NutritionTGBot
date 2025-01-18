@@ -6,35 +6,40 @@ def parse_json_file(file_content: bytes) -> dict:
     try:
         # Parse JSON data
         data = json.loads(file_content.decode('utf-8'))
-
-        # Validate the JSON data structure
-        validate_receipt_data(data)
-
+        
+        # Handle array format
+        if isinstance(data, list):
+            data = data[0].get('ticket', {}).get('document', {}).get('receipt', {})
+        
+        # Handle date fields
+        receipt_date = None
         receipt_date_str = data.get("localDateTime")
         if receipt_date_str:
-            # Parse the date string to a datetime object
             receipt_date = datetime.fromisoformat(receipt_date_str)
         else:
-            # Fallback: convert Unix timestamp to datetime with timezone
+            # Try the nested dateTime format
             timestamp = data.get("dateTime")
-            receipt_date = datetime.fromtimestamp(timestamp)
-
+            if isinstance(timestamp, str):
+                receipt_date = datetime.fromisoformat(timestamp)
+            elif isinstance(timestamp, (int, float)):
+                receipt_date = datetime.fromtimestamp(timestamp)
+        
         # Extract product details
+        items = data.get("items", [])
         products = [
-                {   "id": int(i),
+            {   
+                "id": int(i),
                 "name": item["name"],
                 "price": item["price"],
                 "quantity": item["quantity"]
             }
-            for i, item in enumerate(data.get("items", []))
+            for i, item in enumerate(items)
         ]
-
-        # Return the result dictionary
+        
         return {
             "receipt_date": receipt_date,
             "products": products
         }
-
     except (json.JSONDecodeError, KeyError, ValueError) as e:
         logger.error(f"Error parsing JSON: {e}")
         return {}
