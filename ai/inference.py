@@ -25,8 +25,11 @@ def create_keras_inference_function():
     return process_with_model
 
 def create_bert_inference_function():
-    def process_with_model(input_data: list, model: BertForSequenceClassification) -> ProcessingResult:
+    def process_with_model(input_data: dict, model: BertForSequenceClassification) -> ProcessingResult:
         try:
+            device = next(model.parameters()).device
+            # Move each item to device
+            input_data = {k: v.to(device) for k, v in input_data.items()}
             preds = model(**input_data)
             return ProcessingResult(True, preds)
         except Exception as e:

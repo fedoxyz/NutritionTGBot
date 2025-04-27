@@ -52,7 +52,7 @@ def postprocess_keras_preds(preds):
 
 def postprocess_bert_preds(preds):
     logits = preds.logits
-    probabilities = F.softmax(torch.tensor(logits), dim=1).numpy()
+    probabilities = F.softmax(logits, dim=1).detach().cpu().numpy()
     confidence = np.max(probabilities, axis=1)
     id2label = pickle_load("id2label.pkl")
     pred_labels = np.argmax(probabilities, axis=1)
@@ -64,18 +64,17 @@ def postprocess_bert_preds(preds):
 
 def postprocess_top_5_bert(preds):
     logits = preds.logits
-    probabilities = F.softmax(torch.tensor(logits), dim=1).numpy()
+    probabilities = F.softmax(logits, dim=1).detach().cpu().numpy()
     id2label = pickle_load("id2label.pkl")
     
-    # Get top 5 most probable categories
     top_k = 5
-    top_indices = np.argsort(probabilities[0])[-top_k:][::-1]  # Taking first prediction
+    top_indices = np.argsort(probabilities[0])[-top_k:][::-1]
     top_probs = probabilities[0][top_indices]
     top_categories = [id2label[idx] for idx in top_indices]
     
-    # Print the results
     logger.debug("\nTop 5 most probable categories:")
     for category, prob in zip(top_categories, top_probs):
         logger.debug(f"{category:<65}||   {prob:^10.2f}")
     
     return json.dumps(top_categories, ensure_ascii=False)
+
